@@ -1,106 +1,118 @@
-# modbench ⚖️
+# modbench ⚡
 
-**Local-first LLM benchmarking. Run your own fixtures, get your own numbers.**
+**Benchmark LLM providers locally. Run your own fixtures, get your own numbers.**
 
-```bash
-npm install -g modbench
-modbench run --mock
-```
-
-Or try it without installing:
+Don't trust其他人的 benchmarks. Run them yourself — on your machine, with your prompts, against the models you care about.
 
 ```bash
-npx modbench run --mock
+$ modbench run --mock
+Running benchmarks with mock provider...
+
+# modbench Results
+Total runs: 15 | Errors: 0
+
+## Summary
+| Provider:Model     | Runs | Avg Latency | p95 Latency | Avg Tokens/s |
+|:-------------------|:----:|------------:|------------:|-------------:|
+| mock / mock-gpt    |  15  |     489ms   |     529ms   |        58.3  |
 ```
 
 ## Why?
 
-Every LLM provider claims to be the fastest. Every benchmark site uses someone else's numbers. modbench lets you run the benchmarks yourself — locally, with your own fixtures, on your own machine.
+Every LLM vendor publishes benchmarks that make their model look fastest. Meanwhile, the latency you actually experience depends on geography, network conditions, time of day, and prompt characteristics.
 
-**No cloud. No trust. Just your numbers.**
+modbench gives you a local-first CLI to:
+- **Measure real latency** — TTFT, streaming throughput, total duration
+- **Compare providers** — OpenAI vs Anthropic vs OpenRouter vs Ollama side by side
+- **Test with your prompts** — use built-in fixtures or bring your own
+- **Run offline** — the mock provider needs zero API keys, perfect for CI
 
-## Commands
+## Install
 
-### run
+```bash
+git clone https://github.com/rogerchappel/modbench.git
+cd modbench
+npm install
+npm run build
+npm link  # put modbench on your PATH
+```
 
-Benchmark all fixtures against mock or configured providers:
+## Quick Start
 
+**Mock mode (no API keys needed):**
 ```bash
 modbench run --mock
-modbench run --provider openai --runs 5
-modbench run --fixture greeting --runs 10
 ```
 
-### fixtures
-
-List available benchmark fixtures:
-
+**OpenAI:**
 ```bash
-$ modbench fixtures
-
-Available benchmark fixtures (5):
-
-  greeting
-    Test basic conversational response
-    Category: conversation
-    Prompt length: 23 chars
-
-  summary
-    Test text summarization quality
-    Category: comprehension
-    Prompt length: 156 chars
+export OPENAI_API_KEY="sk-..."
+modbench run --provider openai --model gpt-4o
 ```
 
-### report
-
-Generate formatted report from saved results:
-
+**Custom config:**
 ```bash
-modbench report --file results/bench-2024.json
+modbench run --config my-benchmark.json
 ```
 
-### compare
-
-Compare two benchmark result files:
-
+**Compare two result files:**
 ```bash
-modbench compare --file baseline.json latest.json
+modbench compare --file results-before.json --file results-after.json
 ```
-
-## Built-in Fixtures
-
-| Fixture | Category | Purpose |
-|---------|----------|---------|
-| greeting | conversation | Basic conversational response |
-| summary | comprehension | Text summarization quality |
-| code | coding | Code generation accuracy |
-| json | structured | JSON output conformance |
-| reasoning | logic | Complex reasoning chains |
 
 ## Providers
 
-| Provider | Type | Requires API key |
-|----------|------|:---:|
-| mock | mock | ✗ |
-| openai | openai | ✓ |
-| anthropic | anthropic | ✓ |
-| openrouter | openrouter | ✓ |
-| ollama | ollama | ✗ |
+| Provider | API Key | Latency | Best For |
+|---|---|---|---|
+| `mock` | ❌ None | Configurable | CI, development, testing |
+| `openai` | ✅ Required | ~200-800ms | GPT-4o, o1, o3 benchmarks |
+| `anthropic` | ✅ Required | ~300-1200ms | Claude 3.5/4 Sonnet, Opus |
+| `openrouter` | ✅ Required | Varies | Any model via gateway |
+| `ollama` | ❌ None | Local GPU | Self-hosted models (llama3, mistral) |
 
-## As a Library
+## Metrics
+
+Every run measures:
+- **Time to First Token (TTFT)** — initial response latency
+- **Streaming Latency** — time from first token to completion
+- **Total Latency** — end-to-end duration
+- **Tokens/Second** — throughput during streaming
+- **Token Count** — tokens sent + received
+
+## Fixtures
+
+modbench ships with 6 fixture categories:
+- `greeting` — basic prompts (warm-up)
+- `summarization` — text comprehension
+- `code-generation` — TypeScript, Python, SQL
+- `reasoning` — math and logic puzzles
+- `creative-writing` — stylistic constraints
+- `safety` — ethical reasoning scenarios
+
+## Library API
 
 ```typescript
 import { BenchmarkRunner, createMockProvider } from 'modbench';
 
-const provider = createMockProvider({ latencyMs: 100 });
-const runner = new BenchmarkRunner(provider);
-const results = await runner.runMany(fixtures, { runs: 5 });
+const runner = new BenchmarkRunner();
+const provider = createMockProvider({ latencyMs: 200 });
+const results = await runner.run(provider, { runs: 5 });
 ```
 
-## Requirements
+## Development
 
-- Node.js ≥ 18.0.0
+```bash
+npm run build    # compile TypeScript
+npm test         # run all tests
+npm run smoke    # CLI smoke test
+```
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT — use it, break it, benchmark everything.
+
+## Related
+
+- [stackforge](https://github.com/rogerchappel/stackforge) — scaffold generator this was built with
+- [ossrank](https://github.com/rogerchappel/ossrank) — GitHub repo quality scoring
+- [extaudit](https://github.com/rogerchappel/extaudit) — browser extension security auditor
