@@ -8,17 +8,17 @@ const mockResults: BenchmarkResult[] = [
     provider: "mock",
     model: "mock-gpt",
     fixtureName: "greeting",
-    run: 1,
+    runNumber: 1,
     prompt: "Hello",
     response: "Mock response",
-    timestamp: Date.now(),
-    timeToFirstTokenMs: 100,
-    totalLatencyMs: 500,
-    streamingLatencyMs: 400,
-    tokensPerSecond: 50,
-    tokenCount: 25,
-    success: true,
-    error: null,
+    timestamp: "2026-05-21T00:00:00Z",
+    metrics: {
+      timeToFirstTokenMs: 100,
+      totalLatencyMs: 500,
+      streamingLatencyMs: 400,
+      tokensPerSecond: 50,
+      tokenCount: 25,
+    },
   },
 ];
 
@@ -35,8 +35,8 @@ describe("formatters", () => {
     assert.ok(output.includes("mock-gpt"));
   });
 
-  it("formatCompareMarkdown shows both datasets", () => {
-    const output = formatCompareMarkdown(mockResults, mockResults);
-    assert.ok(output.includes("Benchmark Comparison"));
+  it("formatCompareMarkdown shows comparison header", () => {
+    const output = formatCompareMarkdown(mockResults);
+    assert.ok(output.includes("Cross-Provider Comparison"));
   });
 });
