@@ -1,39 +1,26 @@
-# Code of Conduct
+# Contributor Covenant Code of Conduct
 
 ## Our Pledge
 
-We are committed to making participation in `modbench` respectful and harassment-free.
+We as members, contributors, and leaders pledge to make participation in our
+community a harassment-free experience for everyone.
 
-## Expected Behavior
+## Our Standards
 
-Participants are expected to:
+Examples of behavior that contributes to a positive environment:
 
-- Be respectful and constructive.
-- Keep disagreement focused on ideas, code, documentation, and project direction.
-- Accept feedback gracefully.
-- Respect boundaries, privacy, and maintainer time.
+- Using welcoming and inclusive language
+- Being respectful of differing viewpoints and experiences
+- Gracefully accepting constructive criticism
+- Focusing on what is best for the community
 
-## Unacceptable Behavior
+Examples of unacceptable behavior:
 
-Unacceptable behavior includes:
-
-- Harassment, intimidation, threats, or personal attacks.
-- Discriminatory language or conduct.
-- Sexualized language or unwanted sexual attention.
-- Publishing private information without explicit permission.
-- Sustained disruption of project discussions.
-- Conduct maintainers reasonably determine is harmful to the community.
+- Trolling, insulting or derogatory comments
+- Publishing others' private information without consent
+- Other conduct which could reasonably be considered inappropriate
 
 ## Enforcement
 
-Maintainers may take appropriate action in response to unacceptable behavior, including warnings, moderation, temporary restrictions, or permanent removal from project spaces.
-
-Reports should be made through the project's maintainer channels unless a private reporting channel is listed. Do not include sensitive personal information in public issues or discussions.
-
-## Scope
-
-This code of conduct applies in project spaces, including issues, pull requests, discussions, documentation, chat, events, and other project communication channels.
-
-## Attribution
-
-This code of conduct is adapted from common open-source community standards, including the Contributor Covenant.
+Report issues to the project maintainer via GitHub issues. All complaints will be
+reviewed and investigated promptly and fairly.
