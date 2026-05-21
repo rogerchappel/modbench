@@ -18,13 +18,13 @@ export type {
 export type { Provider } from "./core/provider.js";
 
 export { BenchmarkRunner } from "./core/runner.js";
-export { createMockProvider } from "./providers/mock.js";
-export { createOpenAIProvider } from "./providers/openai.js";
-export { createAnthropicProvider } from "./providers/anthropic.js";
-export { createOpenRouterProvider } from "./providers/openrouter.js";
-export { createOllamaProvider } from "./providers/ollama.js";
-export { getBuiltinFixtures } from "./core/fixtures.js";
+export { MockProvider, MockProfile, MockProviderConfig } from "./providers/mock.js";
+export { OpenAIProvider, OpenAIResponseChunk } from "./providers/openai.js";
+export { AnthropicProvider } from "./providers/anthropic.js";
+export { OpenRouterProvider, OpenRouterProviderOptions } from "./providers/openrouter.js";
+export { OllamaProvider, OllamaProviderOptions } from "./providers/ollama.js";
+export { loadFixtures, getFixtureByName } from "./core/fixtures.js";
 export { loadConfig } from "./config/loader.js";
-export { formatReport } from "./output/formatters.js";
-export { generateReport } from "./output/report.js";
-export { computeStats } from "./analysis/stats.js";
+export { formatMarkdownTable, formatMarkdown, formatCompareMarkdown } from "./output/formatters.js";
+export { buildReportData, writeReportTo } from "./output/report.js";
+export { percentile, mean, median, stdDev, computeSummary } from "./analysis/stats.js";

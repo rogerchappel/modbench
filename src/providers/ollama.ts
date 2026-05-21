@@ -6,71 +6,80 @@
  */
 
 import http from "node:http";
-import type { Provider, TimingMetrics } from "../core/provider.js";
+import type { Provider } from "../core/provider.js";
+import type { ProviderConfig, TimingMetrics } from "../core/types.js";
+import { registerProvider } from "../core/provider.js";
 
-export interface OllamaOptions {
-  model: string;
+export interface OllamaProviderOptions {
+  model?: string;
   baseUrl?: string;
 }
 
-export function createOllamaProvider(opts: OllamaOptions): Provider {
-  const {
-    model = "llama3",
-    baseUrl = "http://localhost:11434",
-  } = opts;
+export class OllamaProvider implements Provider {
+  public readonly name = 'ollama';
+  public readonly model: string;
+  private baseUrl: string;
 
-  return {
-    name: "ollama",
-    model,
+  constructor(config: ProviderConfig) {
+    this.model = config.model || 'llama3.2';
+    this.baseUrl = config.baseUrl || 'http://localhost:11434';
+  }
 
-    async complete(prompt: string): Promise<{ text: string; metrics: TimingMetrics }> {
-      const startTime = Date.now();
-      const url = new URL("/api/generate", baseUrl);
+  async complete(prompt: string): Promise<{ text: string; metrics: TimingMetrics }> {
+    const startTime = Date.now();
+    const url = new URL('/api/generate', this.baseUrl);
 
-      return new Promise((resolve, reject) => {
-        const body = JSON.stringify({ model, prompt, stream: false });
+    return new Promise((resolve, reject) => {
+      const req = http.request(
+        {
+          hostname: url.hostname,
+          port: url.port,
+          path: url.pathname,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => {
+            const endTime = Date.now();
+            const responseBody = Buffer.concat(chunks).toString();
 
-        const req = http.request(
-          {
-            hostname: url.hostname,
-            port: url.port,
-            path: url.pathname,
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-          },
-          (res) => {
-            const chunks: Buffer[] = [];
-            res.on("data", (chunk: Buffer) => chunks.push(chunk));
-            res.on("end", () => {
-              const endTime = Date.now();
-              const responseBody = Buffer.concat(chunks).toString();
+            if (res.statusCode && res.statusCode >= 400) {
+              return reject(new Error(`Ollama API error ${res.statusCode}: ${responseBody.slice(0, 200)}`));
+            }
 
-              try {
-                const data = JSON.parse(responseBody);
-                const text = data.response ?? "";
-                const evalMs = data.eval_duration ?? (endTime - startTime) * 1_000_000;
+            try {
+              const data = JSON.parse(responseBody);
+              const text = data.response ?? '';
+              const evalMs = data.eval_duration ?? (endTime - startTime) * 1_000_000;
+              const totalLatency = endTime - startTime;
+              const tokenCount = data.eval_count ?? null;
 
-                resolve({
-                  text,
-                  metrics: {
-                    timeToFirstTokenMs: Math.round(evalMs / 1_000_000),
-                    totalLatencyMs: endTime - startTime,
-                    streamingLatencyMs: Math.round(evalMs / 1_000_000),
-                    tokensPerSecond: data.eval_count ? Math.round((data.eval_count / evalMs) * 1e9 * 10) / 10 : null,
-                    tokenCount: data.eval_count ?? null,
-                  },
-                });
-              } catch {
-                reject(new Error(`Ollama API error: ${responseBody.slice(0, 200)}`));
-              }
-            });
-          },
-        );
+              resolve({
+                text,
+                metrics: {
+                  timeToFirstTokenMs: Math.round(evalMs / 1_000_000),
+                  totalLatencyMs: totalLatency,
+                  streamingLatencyMs: Math.round(evalMs / 1_000_000),
+                  tokensPerSecond: tokenCount
+                    ? Math.round((tokenCount / (evalMs / 1e9)) * 10) / 10
+                    : null,
+                  tokenCount,
+                },
+              });
+            } catch {
+              reject(new Error(`Failed to parse Ollama response: ${responseBody.slice(0, 100)}`));
+            }
+          });
+        },
+      );
 
-        req.on("error", reject);
-        req.write(body);
-        req.end();
-      });
-    },
-  };
+      req.on('error', reject);
+      req.write(JSON.stringify({ model: this.model, prompt, stream: false }));
+      req.end();
+    });
+  }
 }
+
+registerProvider('ollama', (config: ProviderConfig) => new OllamaProvider(config));
