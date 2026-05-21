@@ -1,5 +1,8 @@
 /**
- * modbench - Public API
+ * modbench - LLM provider benchmarking library
+ *
+ * Local-first CLI for benchmarking latency, throughput, and output quality.
+ * Run your own fixtures, get your own numbers.
  */
 
 export type {
@@ -10,19 +13,18 @@ export type {
   BenchmarkFixture,
   StatisticalSummary,
   BenchmarkReport,
-} from './core/types.js';
+} from "./core/types.js";
 
-export { type Provider, type ProviderFactory, providerRegistry, registerProvider, createProvider } from './core/provider.js';
+export type { Provider } from "./core/provider.js";
 
-export { BenchmarkRunner, type RunOptions } from './core/runner.js';
-
-export { loadFixtures, getFixtureByName } from './core/fixtures.js';
-
-export { OpenAIProvider } from './providers/openai.js';
-export { AnthropicProvider } from './providers/anthropic.js';
-export { MockProvider, type MockProviderConfig, type MockProfile } from './providers/mock.js';
-
-export { mean, median, stdDev, percentile, computeSummary } from './analysis/stats.js';
-
-export { formatMarkdown, formatCompareMarkdown, formatMarkdownTable } from './output/formatters.js';
-export { buildReportData, writeReportTo } from './output/report.js';
+export { BenchmarkRunner } from "./core/runner.js";
+export { createMockProvider } from "./providers/mock.js";
+export { createOpenAIProvider } from "./providers/openai.js";
+export { createAnthropicProvider } from "./providers/anthropic.js";
+export { createOpenRouterProvider } from "./providers/openrouter.js";
+export { createOllamaProvider } from "./providers/ollama.js";
+export { getBuiltinFixtures } from "./core/fixtures.js";
+export { loadConfig } from "./config/loader.js";
+export { formatReport } from "./output/formatters.js";
+export { generateReport } from "./output/report.js";
+export { computeStats } from "./analysis/stats.js";
