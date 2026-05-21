@@ -1,0 +1,48 @@
+{
+  "name": "modbench",
+  "version": "0.1.0",
+  "description": "Local-first CLI for benchmarking LLM provider latency, throughput, and output quality. Run your own fixtures, get your own numbers.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "modbench": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --experimental-vm-modules --test dist/**/*.test.js",
+    "test:dev": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' node --test --loader ts-node/esm src/tests/**/*.test.ts",
+    "prebuild": "rm -rf dist",
+    "package:smoke": "npm pack --dry-run",
+    "release:check": "npm test && npm run build && npm run package:smoke",
+    "lint": "tsc --noEmit",
+    "check": "tsc --noEmit",
+    "smoke": "node dist/cli.js run --mock"
+  },
+  "keywords": [
+    "llm",
+    "benchmark",
+    "openai",
+    "anthropic",
+    "latency",
+    "throughput",
+    "cli",
+    "performance"
+  ],
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rogerchappel/modbench.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3"
+  }
+}
