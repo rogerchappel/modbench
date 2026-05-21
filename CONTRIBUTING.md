@@ -1,79 +1,52 @@
-# Contributing
+# Contributing to modbench
 
-Thanks for helping improve `modbench`.
+## Quick Start
 
-This project values small, reviewable contributions with clear verification.
+1. Fork and clone
+2. `npm install`
+3. `npm run build`
+4. `npm test`
+5. Make changes, write tests, repeat
 
-## Issues
+## Architecture Overview
 
-Before opening an issue:
-
-- Search existing issues.
-- Confirm the issue applies to `modbench`.
-- Include enough context for maintainers to understand or reproduce the request.
-
-Bug reports should include:
-
-- What happened.
-- What you expected.
-- Steps to reproduce.
-- Relevant logs, screenshots, or files.
-- The smallest verification step that demonstrates the issue.
-
-Feature requests should include:
-
-- The use case.
-- Why the current project does not solve it.
-- Risks or compatibility concerns.
-- Suggested files or behavior that may need to change.
-
-## Pull Requests
-
-Pull requests should:
-
-- Focus on one reviewable intent.
-- Use a branch.
-- Follow Conventional Commits.
-- Include tests or verification appropriate to the change.
-- Update documentation when behavior or usage changes.
-- Avoid unrelated formatting or dependency churn.
-- Avoid secrets, private contact details, and project-specific sensitive information.
-
-## Review Pack
-
-Use this format for meaningful changes:
-
-```md
-## Review Pack
-Repo:
-Branch:
-PR:
-Task:
-Status: done / blocked / needs review
-Summary:
-Commits:
-Files changed:
-Verification:
-Risk level:
-Rollback plan:
-Human decision needed:
-Next recommended task:
+```
+src/
+├── core/           # Benchmark types, provider interface, fixtures, runner
+├── providers/      # LLM provider implementations
+│   ├── mock.ts     # Deterministic offline provider (no API key)
+│   ├── openai.ts   # OpenAI streaming API
+│   ├── anthropic.ts # Anthropic streaming API
+│   ├── openrouter.ts # OpenRouter gateway
+│   └── ollama.ts   # Local Ollama models
+├── config/         # Configuration loader
+├── analysis/       # Statistical computation (mean, median, p95, etc.)
+├── output/         # Markdown formatters and report generation
+└── cli.ts          # CLI entry point (commander)
 ```
 
-## Verification
+## Adding a Provider
 
-Every contribution should include verification.
+1. Create `src/providers/<name>.ts`
+2. Implement the `Provider` interface from `src/core/provider.ts`
+3. Call `registerProvider('<name>', ...)` to add to the registry
+4. Add provider type to `ProviderConfig.providerType` union
+5. Write tests in `src/providers/<name>.test.ts`
+6. Export from `src/index.ts`
 
-Examples:
+## Testing
 
-- Documentation: inspect rendered Markdown or review the diff.
-- Tests: run the targeted test command.
-- Types: run the project typecheck.
-- Build: run the smallest build command that covers the change.
-- Manual QA: provide exact steps and observed result.
+- Unit tests: `npm run build && npm test`
+- Integration: `node dist/cli.js run --mock`
+- All tests use Node.js native test runner (`node --test`)
+- No mocks/stubs required — mock provider is a real provider
 
-If verification cannot be run, explain why and provide the exact command maintainers should run.
+## Commit Convention
 
-## Maintainer Review
-
-Maintainers may request narrower scope, clearer verification, additional tests, or safer defaults before merging.
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat:` new functionality
+- `fix:` bug fixes
+- `docs:` documentation changes
+- `test:` test additions or fixes
+- `refactor:` code restructuring
+- `chore:` build, CI, tooling
