@@ -1,0 +1,14 @@
+{
+  "providers": [
+    {
+      "name": "baseline",
+      "providerType": "mock",
+      "model": "mock-gpt",
+      "apiKey": "",
+      "latencyMs": 300,
+      "temperature": 0
+    }
+  ],
+  "defaultRuns": 5,
+  "outputDir": "./results"
+}

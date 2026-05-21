@@ -1,0 +1,10 @@
+[
+  {
+    "name": "my-prompts",
+    "category": "custom",
+    "prompts": [
+      "Explain recursion in JavaScript using a practical example.",
+      "Write a function that checks if a string is a palindrome."
+    ]
+  }
+]
