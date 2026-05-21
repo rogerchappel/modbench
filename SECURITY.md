@@ -2,57 +2,25 @@
 
 ## Supported Versions
 
-Replace this section with the supported versions for `modbench`.
-
-Example:
-
-```md
 | Version | Supported |
-| --- | --- |
-| .x | Yes |
-| < .0 | No |
-```
-
-If the project does not publish versioned releases yet, say that clearly.
+|---|---|
+| 0.1.x | ✅ |
 
 ## Reporting a Vulnerability
 
-Please do not report suspected vulnerabilities in public issues, pull requests, or discussions.
+modbench runs entirely on the user's machine and does not send telemetry or analytics data to any external service.
 
-Ask maintainers for the private security reporting path before sharing details.
+**Data flow:** Your prompts are sent **only** to the LLM provider you configure (OpenAI, Anthropic, OpenRouter, Ollama, etc.). modbench itself does not store, log, or transmit prompts elsewhere.
 
-If no private reporting path exists yet, ask maintainers through public project channels for a private reporting path. Do not include exploit details, secrets, personal data, or sensitive technical details in public messages.
+**API keys:** Keys are read from environment variables or config files on your machine. They are passed directly to the respective provider's API. modbench does not store keys after use.
 
-## What to Include
+If you discover a security issue:
+1. Do **not** open a public issue.
+2. Email the maint (see repository contact) with a description and reproduction steps.
+3. We will respond within 7 days and work on a fix.
 
-When a private reporting path is available, include:
+## Best Practices for Users
 
-- A clear description of the issue.
-- Affected versions, files, packages, workflows, or configuration.
-- Steps to reproduce, proof of concept, or attack scenario when safe to share.
-- Potential impact.
-- Suggested mitigation, if known.
-
-## Response Expectations
-
-Maintainers review good-faith reports as capacity allows.
-
-Do not imply paid support, guaranteed response times, guaranteed fixes, or service-level agreements unless `modbench` explicitly provides them.
-
-## Scope
-
-In scope:
-
-- Vulnerabilities in modbench.
-- Insecure default configuration shipped by this project.
-- CI, release, or dependency guidance maintained by this project.
-
-Out of scope:
-
-- General support requests.
-- Requests for guaranteed maintenance timelines.
-- Issues in unrelated downstream projects.
-
-## Disclosure
-
-Coordinate disclosure with maintainers before publishing vulnerability details.
+- Never commit API keys to this repository.
+- Use environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) rather than config files for sensitive values.
+- The mock provider requires no API key and is safe to use in CI without secrets.
