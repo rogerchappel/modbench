@@ -1,6 +1,27 @@
-node_modules/
+# Build
 dist/
 *.tsbuildinfo
-package-lock.json
-*.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config
+*.env
+.env.local
+
+# Reports
 results/
+*.json.report
+
+# npm
+npm-debug.log*
