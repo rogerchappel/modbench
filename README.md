@@ -116,3 +116,14 @@ MIT — use it, break it, benchmark everything.
 - [stackforge](https://github.com/rogerchappel/stackforge) — scaffold generator this was built with
 - [ossrank](https://github.com/rogerchappel/ossrank) — GitHub repo quality scoring
 - [extaudit](https://github.com/rogerchappel/extaudit) — browser extension security auditor
+
+## Verification
+
+Run these checks before opening a PR or publishing a release:
+
+```bash
+pnpm test
+pnpm run smoke
+pnpm run package:smoke
+pnpm run release:check
+```
