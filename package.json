@@ -10,7 +10,11 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "CODE_OF_CONDUCT.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -18,7 +22,7 @@
     "test:dev": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' node --test --loader ts-node/esm src/tests/**/*.test.ts",
     "prebuild": "rm -rf dist",
     "package:smoke": "npm pack --dry-run",
-    "release:check": "npm test && npm run build && npm run package:smoke",
+    "release:check": "npm run check && npm run build && npm test && npm run smoke && npm run package:smoke",
     "lint": "tsc --noEmit",
     "check": "tsc --noEmit",
     "smoke": "node dist/cli.js run --mock"
