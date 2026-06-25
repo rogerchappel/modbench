@@ -4,12 +4,25 @@
   "description": "Local-first CLI for benchmarking LLM provider latency, throughput, and output quality. Run your own fixtures, get your own numbers.",
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "modbench": "./dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "files": [
     "dist",
-    "README.md"
+    "docs",
+    "examples",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -36,8 +49,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rogerchappel/modbench.git"
+    "url": "git+https://github.com/rogerchappel/modbench.git"
   },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/modbench/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/modbench#readme",
   "engines": {
     "node": ">=18.0.0"
   },
