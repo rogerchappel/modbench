@@ -107,6 +107,13 @@ npm test         # run all tests
 npm run smoke    # CLI smoke test
 ```
 
+## Package contents
+
+The npm package allowlist includes the runtime files plus the public support
+documents needed for release review: `README.md`, `LICENSE`, `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`.
+Run `npm run package:smoke` or `npm pack --dry-run` before publishing to
+confirm those files are still present in the tarball.
+
 ## License
 
 MIT — use it, break it, benchmark everything.
@@ -116,3 +123,20 @@ MIT — use it, break it, benchmark everything.
 - [stackforge](https://github.com/rogerchappel/stackforge) — scaffold generator this was built with
 - [ossrank](https://github.com/rogerchappel/ossrank) — GitHub repo quality scoring
 - [extaudit](https://github.com/rogerchappel/extaudit) — browser extension security auditor
+
+## Verification
+
+Run these checks before opening a PR or publishing a release:
+
+```bash
+pnpm test
+pnpm run smoke
+pnpm run package:smoke
+pnpm run release:check
+```
+
+## Verification
+
+Run the release-readiness checks that match this package before publishing or opening a release PR.
+
+- `npm run lint` - run lint rules
