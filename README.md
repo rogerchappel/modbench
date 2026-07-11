@@ -123,6 +123,16 @@ MIT — use it, break it, benchmark everything.
 - [stackforge](https://github.com/rogerchappel/stackforge) — scaffold generator this was built with
 - [ossrank](https://github.com/rogerchappel/ossrank) — GitHub repo quality scoring
 - [extaudit](https://github.com/rogerchappel/extaudit) — browser extension security auditor
+## CLI Help Smoke
+
+Confirm the packaged command starts and prints its help text before relying on a release tarball or downstream automation:
+
+```bash
+npm run build
+node ./dist/cli.js --help
+```
+
+The command should exit successfully, print the available options, and avoid reading project files or contacting external services.
 
 ## Verification
 
