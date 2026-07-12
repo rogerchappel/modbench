@@ -30,7 +30,7 @@
     "test": "node --experimental-vm-modules --test dist/**/*.test.js",
     "test:dev": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' node --test --loader ts-node/esm src/tests/**/*.test.ts",
     "prebuild": "rm -rf dist",
-    "package:smoke": "npm pack --dry-run",
+    "package:smoke": "npm run build && node dist/cli.js --help >/dev/null && node dist/cli.js --version >/dev/null && npm pack --dry-run",
     "release:check": "npm run check && npm run build && npm test && npm run smoke && npm run package:smoke",
     "lint": "tsc --noEmit",
     "check": "tsc --noEmit",
