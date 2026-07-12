@@ -217,6 +217,11 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (args[0] === '--version' || args[0] === '-v') {
+    console.log(BENCHMARK_VERSION);
+    return;
+  }
+
   // Import provider implementations to register them
   await import('./providers/openai.js');
   await import('./providers/anthropic.js');
