@@ -225,6 +225,8 @@ async function main(): Promise<void> {
   // Import provider implementations to register them
   await import('./providers/openai.js');
   await import('./providers/anthropic.js');
+  await import('./providers/openrouter.js');
+  await import('./providers/ollama.js');
   await import('./providers/mock.js');
 
   const command = args[0];
