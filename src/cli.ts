@@ -5,6 +5,7 @@
  */
 
 import type { BenchmarkResult } from './core/types.js';
+import { writeFile } from 'node:fs/promises';
 const BENCHMARK_VERSION = '0.1.0';
 
 function printHelp(): void {
@@ -12,23 +13,28 @@ function printHelp(): void {
 modbench v${BENCHMARK_VERSION} - LLM provider benchmarking CLI
 
 Usage:
-  modbench run [--mock] [--provider <name>] [--runs <n>] [--fixture <name>]
+  modbench run [--mock] [--config <path>] [--provider <name>] [--runs <n>]
+               [--fixture <name> | --fixture-file <path>] [--out <path>]
   modbench fixtures
   modbench report [--file <path>]
-  modbench compare --files <path1> <path2>
+  modbench compare --file <path1> --file <path2>
 
 Options:
   --mock         Use mock provider (offline, deterministic)
   --provider     Provider name from config
   --runs         Number of runs per fixture (default: 3)
   --fixture      Specific fixture name to run
-  --out          Output file for results (default: stdout)
+  --fixture-file Load fixtures from a JSON file
+  --config       Load provider configuration from a JSON file
+  --out          Write JSON results to a file (default: Markdown on stdout)
 
 Examples:
   modbench run --mock
   modbench run --provider openai --runs 5
+  modbench run --mock --fixture-file examples/custom-fixtures.json --out results.json
   modbench fixtures
   modbench report --file results/bench-2024.json
+  modbench compare --file before.json --file after.json
 `);
 }
 
@@ -45,34 +51,66 @@ function printFixtures(
   }
 }
 
-function parseArg(args: string[], flag: string): string | undefined {
-  const idx = args.indexOf(flag);
-  if (idx === -1 || idx + 1 >= args.length) return undefined;
-  return args[idx + 1];
+function parseOptions(
+  args: string[],
+  booleanOptions: Set<string>,
+  valueOptions: Set<string>,
+  repeatableOptions: Set<string> = new Set(),
+): Map<string, string[]> {
+  const parsed = new Map<string, string[]>();
+  for (let i = 0; i < args.length; i++) {
+    const option = args[i];
+    if (!option.startsWith('--') || (!booleanOptions.has(option) && !valueOptions.has(option))) {
+      throw new Error(`Unknown option: ${option}`);
+    }
+    if (booleanOptions.has(option)) {
+      if (parsed.has(option)) throw new Error(`Option may only be specified once: ${option}`);
+      parsed.set(option, []);
+      continue;
+    }
+    const value = args[++i];
+    if (!value || value.startsWith('--')) throw new Error(`Option ${option} requires a value`);
+    if (parsed.has(option) && !repeatableOptions.has(option)) {
+      throw new Error(`Option may only be specified once: ${option}`);
+    }
+    parsed.set(option, [...(parsed.get(option) ?? []), value]);
+  }
+  return parsed;
 }
 
 async function runCommand(args: string[]): Promise<void> {
-  const mockMode = args.includes('--mock');
-  const targetProvider = parseArg(args, '--provider');
-  const runs = parseInt(parseArg(args, '--runs') || '3', 10);
-  const fixtureFilter = parseArg(args, '--fixture');
+  const options = parseOptions(
+    args,
+    new Set(['--mock']),
+    new Set(['--provider', '--runs', '--fixture', '--fixture-file', '--config', '--out']),
+  );
+  const mockMode = options.has('--mock');
+  const targetProvider = options.get('--provider')?.[0];
+  const runsValue = options.get('--runs')?.[0] ?? '3';
+  if (!/^[1-9]\d*$/.test(runsValue)) throw new Error('--runs must be a positive integer');
+  const runs = Number(runsValue);
+  const fixtureFilter = options.get('--fixture')?.[0];
+  const fixtureFile = options.get('--fixture-file')?.[0];
+  const configFile = options.get('--config')?.[0];
+  const outputFile = options.get('--out')?.[0];
+  if (fixtureFilter && fixtureFile) {
+    throw new Error('--fixture and --fixture-file cannot be used together');
+  }
+
+  const { loadFixtures, loadFixtureFile } = await import('./core/fixtures.js');
+  const fixtures = fixtureFile ? await loadFixtureFile(fixtureFile) : await loadFixtures();
+  const filteredFixtures = fixtureFilter
+    ? fixtures.filter((fixture) => fixture.name === fixtureFilter)
+    : fixtures;
+  if (filteredFixtures.length === 0) throw new Error('No fixtures found.');
+
+  let allResults: BenchmarkResult[] = [];
 
   if (mockMode) {
     console.log('Running benchmarks with mock provider...\n');
 
-    const { loadFixtures } = await import('./core/fixtures.js');
     const { BenchmarkRunner } = await import('./core/runner.js');
     const { MockProvider } = await import('./providers/mock.js');
-
-    const fixtures = await loadFixtures();
-    const filteredFixtures = fixtureFilter
-      ? fixtures.filter((f) => f.name === fixtureFilter)
-      : fixtures;
-
-    if (filteredFixtures.length === 0) {
-      console.error('No fixtures found.');
-      process.exit(1);
-    }
 
     const provider = new MockProvider({
       name: 'mock',
@@ -83,21 +121,21 @@ async function runCommand(args: string[]): Promise<void> {
     });
 
     const runner = new BenchmarkRunner(provider);
-    const results = await runner.runMany(filteredFixtures, { runs });
-
-    const { formatMarkdown } = await import('./output/formatters.js');
-    console.log(formatMarkdown(results));
+    allResults = await runner.runMany(filteredFixtures, { runs });
   } else {
     console.log('Running benchmarks with live providers...');
     const { loadConfig } = await import('./config/loader.js');
 
     let config: import('./core/types.js').BenchmarkConfig;
     try {
-      config = await loadConfig();
-    } catch {
+      config = await loadConfig(configFile);
+    } catch (error) {
       console.error(
-        'No .modbench.json config found. Use --mock for offline testing, or create a config file.',
+        configFile
+          ? `Could not load config from: ${configFile}`
+          : 'No .modbench.json config found. Use --mock for offline testing, or create a config file.',
       );
+      if (error instanceof Error) console.error(error.message);
       process.exit(1);
     }
 
@@ -111,15 +149,7 @@ async function runCommand(args: string[]): Promise<void> {
     }
 
     const { createProvider } = await import('./core/provider.js');
-    const { loadFixtures } = await import('./core/fixtures.js');
     const { BenchmarkRunner } = await import('./core/runner.js');
-
-    const fixtures = await loadFixtures();
-    const filteredFixtures = fixtureFilter
-      ? fixtures.filter((f) => f.name === fixtureFilter)
-      : fixtures;
-
-    const allResults: BenchmarkResult[] = [];
 
     for (const pc of providers) {
       console.log(`\nBenchmarking: ${pc.name} (${pc.model})...`);
@@ -129,6 +159,12 @@ async function runCommand(args: string[]): Promise<void> {
       allResults.push(...results);
     }
 
+  }
+
+  if (outputFile) {
+    await writeFile(outputFile, `${JSON.stringify(allResults, null, 2)}\n`, 'utf8');
+    console.log(`Wrote ${allResults.length} result${allResults.length === 1 ? '' : 's'} to ${outputFile}`);
+  } else {
     const { formatMarkdown } = await import('./output/formatters.js');
     console.log(formatMarkdown(allResults));
   }
@@ -141,7 +177,7 @@ async function fixturesCommand(): Promise<void> {
 }
 
 async function reportCommand(args: string[]): Promise<void> {
-  const file = parseArg(args, '--file');
+  const file = parseOptions(args, new Set(), new Set(['--file'])).get('--file')?.[0];
 
   if (!file) {
     console.error('Usage: modbench report --file <path>');
@@ -163,25 +199,14 @@ async function reportCommand(args: string[]): Promise<void> {
 }
 
 async function compareCommand(args: string[]): Promise<void> {
-  const filesArg = parseArg(args, '--files');
-
-  const fileArgs = args.filter((a, i) => a === '--files' && args[i + 1])
-    .flatMap((_, i) => {
-      const vals: string[] = [];
-      // Grab all args after --files that aren't flags
-      const idx = args.indexOf('--files');
-      if (idx >= 0) {
-        for (let j = idx + 1; j < args.length; j++) {
-          if (args[j].startsWith('--')) break;
-          vals.push(args[j]);
-        }
-      }
-      return vals;
-    });
-
-  const files = filesArg ? filesArg.split(' ') : fileArgs;
+  const files = parseOptions(
+    args,
+    new Set(),
+    new Set(['--file']),
+    new Set(['--file']),
+  ).get('--file') ?? [];
   if (files.length < 2) {
-    console.error('Usage: modbench compare --files <path1> <path2>');
+    console.error('Usage: modbench compare --file <path1> --file <path2>');
     process.exit(1);
   }
 
@@ -236,6 +261,7 @@ async function main(): Promise<void> {
       await runCommand(args.slice(1));
       break;
     case 'fixtures':
+      if (args.length > 1) throw new Error(`Unknown option: ${args[1]}`);
       await fixturesCommand();
       break;
     case 'report':

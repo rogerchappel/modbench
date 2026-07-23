@@ -79,6 +79,21 @@ export async function loadFixtures(): Promise<BenchmarkFixture[]> {
   return bundled;
 }
 
+export async function loadFixtureFile(path: string): Promise<BenchmarkFixture[]> {
+  const raw = await readFile(path, 'utf8');
+  const parsed: unknown = JSON.parse(raw);
+  const fixtures = Array.isArray(parsed) ? parsed : [parsed];
+  if (fixtures.length === 0 || fixtures.some((fixture) =>
+    typeof fixture !== 'object' || fixture === null
+    || typeof (fixture as Record<string, unknown>).name !== 'string'
+    || typeof (fixture as Record<string, unknown>).description !== 'string'
+    || typeof (fixture as Record<string, unknown>).prompt !== 'string'
+  )) {
+    throw new Error(`Invalid fixture file: ${path}`);
+  }
+  return fixtures as BenchmarkFixture[];
+}
+
 export function getFixtureByName(
   fixtures: BenchmarkFixture[],
   name: string,
