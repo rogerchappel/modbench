@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node --experimental-vm-modules --test dist/**/*.test.js",
+    "test": "node --experimental-vm-modules --test dist/*.test.js dist/**/*.test.js",
     "test:dev": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' node --test --loader ts-node/esm src/tests/**/*.test.ts",
     "prebuild": "rm -rf dist",
     "package:smoke": "npm run build && node dist/cli.js --help >/dev/null && node dist/cli.js --version >/dev/null && npm pack --dry-run",

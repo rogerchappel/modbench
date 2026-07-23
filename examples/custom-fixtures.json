@@ -1,10 +1,14 @@
 [
   {
     "name": "my-prompts",
+    "description": "Explain a programming concept",
     "category": "custom",
-    "prompts": [
-      "Explain recursion in JavaScript using a practical example.",
-      "Write a function that checks if a string is a palindrome."
-    ]
+    "prompt": "Explain recursion in JavaScript using a practical example."
+  },
+  {
+    "name": "palindrome",
+    "description": "Implement a string algorithm",
+    "category": "custom",
+    "prompt": "Write a function that checks if a string is a palindrome."
   }
 ]
