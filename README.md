@@ -47,7 +47,7 @@ modbench run --mock
 **OpenAI:**
 ```bash
 export OPENAI_API_KEY="sk-..."
-modbench run --provider openai --model gpt-4o
+modbench run --provider openai
 ```
 
 **Custom config:**
@@ -58,6 +58,12 @@ modbench run --config my-benchmark.json
 **Compare two result files:**
 ```bash
 modbench compare --file results-before.json --file results-after.json
+```
+
+Write machine-readable results for later reporting or comparison:
+```bash
+modbench run --mock --out results.json
+modbench report --file results.json
 ```
 
 ## Providers
