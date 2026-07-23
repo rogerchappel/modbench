@@ -119,14 +119,14 @@ describe('CLI', () => {
     for (const args of [
       ['run', '--wat'],
       ['run', '--mock', '--runs', 'zero'],
-      ['run', '--mock', '--runs', '0'],
+      ['run', '--mock', '--runs', '-1'],
       ['run', '--mock', '--out'],
       ['fixtures', '--extra'],
       ['report', '--file'],
     ]) {
       const result = runCli(args);
       assert.notEqual(result.status, 0, args.join(' '));
-      assert.match(result.stderr, /Unknown option|requires a value|positive integer|Usage:/);
+      assert.match(result.stderr, /Unknown option|requires a value|non-negative integer|Usage:/);
     }
   });
 

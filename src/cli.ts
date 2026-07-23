@@ -87,7 +87,7 @@ async function runCommand(args: string[]): Promise<void> {
   const mockMode = options.has('--mock');
   const targetProvider = options.get('--provider')?.[0];
   const runsValue = options.get('--runs')?.[0] ?? '3';
-  if (!/^[1-9]\d*$/.test(runsValue)) throw new Error('--runs must be a positive integer');
+  if (!/^\d+$/.test(runsValue)) throw new Error('--runs must be a non-negative integer');
   const runs = Number(runsValue);
   const fixtureFilter = options.get('--fixture')?.[0];
   const fixtureFile = options.get('--fixture-file')?.[0];
