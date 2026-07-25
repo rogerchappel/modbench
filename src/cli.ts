@@ -5,6 +5,7 @@
  */
 
 import type { BenchmarkResult } from './core/types.js';
+import { assertPositiveRunCount } from './core/run-options.js';
 import { writeFile } from 'node:fs/promises';
 const BENCHMARK_VERSION = '0.1.0';
 
@@ -22,7 +23,7 @@ Usage:
 Options:
   --mock         Use mock provider (offline, deterministic)
   --provider     Provider name from config
-  --runs         Number of runs per fixture (default: 3)
+  --runs         Positive safe integer runs per fixture (default: 3)
   --fixture      Specific fixture name to run
   --fixture-file Load fixtures from a JSON file
   --config       Load provider configuration from a JSON file
@@ -87,8 +88,8 @@ async function runCommand(args: string[]): Promise<void> {
   const mockMode = options.has('--mock');
   const targetProvider = options.get('--provider')?.[0];
   const runsValue = options.get('--runs')?.[0] ?? '3';
-  if (!/^\d+$/.test(runsValue)) throw new Error('--runs must be a non-negative integer');
-  const runs = Number(runsValue);
+  if (!/^\d+$/.test(runsValue)) throw new Error('CLI --runs must be a positive safe integer');
+  const runs = assertPositiveRunCount(Number(runsValue), 'CLI --runs');
   const fixtureFilter = options.get('--fixture')?.[0];
   const fixtureFile = options.get('--fixture-file')?.[0];
   const configFile = options.get('--config')?.[0];
