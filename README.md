@@ -97,6 +97,11 @@ modbench ships with 6 fixture categories:
 
 ## Library API
 
+Run counts are positive safe integers (`1` through
+`Number.MAX_SAFE_INTEGER`). This contract applies to CLI `--runs`, config
+`defaultRuns`, and the library's `RunOptions.runs`; invalid values are rejected
+before a provider is called.
+
 ```typescript
 import { BenchmarkRunner, createMockProvider } from 'modbench';
 

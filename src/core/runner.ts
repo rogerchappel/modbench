@@ -5,6 +5,7 @@
 
 import type { Provider } from '../core/provider.js';
 import type { BenchmarkFixture, BenchmarkResult } from '../core/types.js';
+import { assertPositiveRunCount } from './run-options.js';
 
 export interface RunOptions {
   runs?: number;
@@ -24,7 +25,7 @@ export class BenchmarkRunner {
     fixture: BenchmarkFixture,
     options: RunOptions = {},
   ): Promise<BenchmarkResult[]> {
-    const runCount = options.runs ?? 3;
+    const runCount = assertPositiveRunCount(options.runs ?? 3, 'RunOptions.runs');
     const results: BenchmarkResult[] = [];
 
     for (let i = 0; i < runCount; i++) {

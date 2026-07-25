@@ -119,18 +119,21 @@ describe('CLI', () => {
     for (const args of [
       ['run', '--wat'],
       ['run', '--mock', '--runs', 'zero'],
+      ['run', '--mock', '--runs', '0'],
       ['run', '--mock', '--runs', '-1'],
+      ['run', '--mock', '--runs', '1.5'],
+      ['run', '--mock', '--runs', '9007199254740992'],
       ['run', '--mock', '--out'],
       ['fixtures', '--extra'],
       ['report', '--file'],
     ]) {
       const result = runCli(args);
       assert.notEqual(result.status, 0, args.join(' '));
-      assert.match(result.stderr, /Unknown option|requires a value|non-negative integer|Usage:/);
+      assert.match(result.stderr, /Unknown option|requires a value|positive safe integer|Usage:/);
     }
   });
 
-  it('run command creates every configured provider type without making requests', () => {
+  it('rejects invalid --runs before creating configured providers', () => {
     const configDir = mkdtempSync(path.join(tmpdir(), 'modbench-cli-'));
     const providers = ['openai', 'anthropic', 'openrouter', 'ollama', 'mock'].map(
       (providerType) => ({
@@ -145,11 +148,11 @@ describe('CLI', () => {
       writeFileSync(path.join(configDir, '.modbench.json'), JSON.stringify({ providers }));
       const result = runCli(['run', '--runs', '0'], configDir);
 
-      assert.equal(result.status, 0, result.stderr);
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /CLI --runs must be a positive safe integer/);
       for (const provider of providers) {
-        assert.match(result.stdout, new RegExp(`Benchmarking: ${provider.name} \\(test-model\\)`));
+        assert.doesNotMatch(result.stdout, new RegExp(`Benchmarking: ${provider.name}`));
       }
-      assert.equal(result.stderr, '');
     } finally {
       rmSync(configDir, { recursive: true, force: true });
     }

@@ -10,7 +10,8 @@ modbench run --mock --runs 5
 
 ## Config File
 
-Create a JSON config and reference it:
+Create a JSON config and reference it. `defaultRuns` must be a positive safe
+integer:
 
 ```json
 {

@@ -35,6 +35,15 @@ class TestProvider implements Provider {
   }
 }
 
+class CountingProvider extends TestProvider {
+  calls = 0;
+
+  override async complete(prompt: string) {
+    this.calls++;
+    return super.complete(prompt);
+  }
+}
+
 const sampleFixture: BenchmarkFixture = {
   name: 'test-fixture',
   description: 'A test fixture',
@@ -76,6 +85,19 @@ describe('BenchmarkRunner', () => {
   it('uses default runs of 3 when not specified', async () => {
     const results = await runner.run(sampleFixture);
     assert.strictEqual(results.length, 3);
+  });
+
+  it('rejects invalid RunOptions.runs before provider execution', async () => {
+    for (const runs of [0, -1, 1.5, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+      const countingProvider = new CountingProvider();
+      const countingRunner = new BenchmarkRunner(countingProvider);
+
+      await assert.rejects(
+        () => countingRunner.run(sampleFixture, { runs }),
+        /RunOptions\.runs must be a positive safe integer/,
+      );
+      assert.equal(countingProvider.calls, 0);
+    }
   });
 
   it('passes the full prompt to provider', async () => {

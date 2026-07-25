@@ -67,4 +67,36 @@ describe("config loader", () => {
     const config = await loadConfig(configPath);
     assert.strictEqual(config.defaultRuns, 3);
   });
+
+  it("rejects invalid config defaultRuns values", async () => {
+    for (const defaultRuns of [0, -1, 1.5, null, Number.MAX_SAFE_INTEGER + 1]) {
+      configPath = join(tmpDir, `invalid-runs-${String(defaultRuns)}.json`);
+      writeFileSync(configPath, JSON.stringify({
+        providers: [
+          { name: "test", providerType: "mock", model: "gpt", apiKey: "" },
+        ],
+        defaultRuns,
+      }));
+
+      await assert.rejects(
+        () => loadConfig(configPath),
+        /Config defaultRuns must be a positive safe integer/,
+      );
+    }
+  });
+
+  it("rejects a non-finite config defaultRuns value", async () => {
+    configPath = join(tmpDir, "infinite-runs.json");
+    writeFileSync(configPath, `{
+      "providers": [
+        { "name": "test", "providerType": "mock", "model": "gpt", "apiKey": "" }
+      ],
+      "defaultRuns": 1e400
+    }`);
+
+    await assert.rejects(
+      () => loadConfig(configPath),
+      /Config defaultRuns must be a positive safe integer/,
+    );
+  });
 });
