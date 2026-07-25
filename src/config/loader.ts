@@ -6,6 +6,7 @@
 import type { BenchmarkConfig } from '../core/types.js';
 import { readFile, access } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { assertPositiveRunCount } from '../core/run-options.js';
 
 const DEFAULT_CONFIG_FILENAME = '.modbench.json';
 
@@ -70,9 +71,16 @@ export async function loadConfig(
     }
   }
 
+  const defaultRuns = config.defaultRuns === undefined
+    ? 3
+    : assertPositiveRunCount(
+      typeof config.defaultRuns === 'number' ? config.defaultRuns : Number.NaN,
+      'Config defaultRuns',
+    );
+
   return {
     providers: config.providers as BenchmarkConfig['providers'],
-    defaultRuns: typeof config.defaultRuns === 'number' ? config.defaultRuns : 3,
+    defaultRuns,
     outputDir: typeof config.outputDir === 'string' ? config.outputDir : undefined,
   };
 }
