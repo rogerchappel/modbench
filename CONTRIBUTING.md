@@ -3,10 +3,9 @@
 ## Quick Start
 
 1. Fork and clone
-2. `npm install`
-3. `npm run build`
-4. `npm test`
-5. Make changes, write tests, repeat
+2. `npm ci`
+3. `npm test`
+4. Make changes, write tests, repeat
 
 ## Architecture Overview
 
@@ -36,8 +35,9 @@ src/
 
 ## Testing
 
-- Unit tests: `npm run build && npm test`
-- Integration: `node dist/cli.js run --mock`
+- Unit tests: `npm test` (builds first and fails when no tests are discovered)
+- Integration: `npm run smoke`
+- Package consumer: `npm run package:smoke`
 - All tests use Node.js native test runner (`node --test`)
 - No mocks/stubs required — mock provider is a real provider
 
