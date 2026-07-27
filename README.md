@@ -113,17 +113,19 @@ const results = await runner.run(provider, { runs: 5 });
 ## Development
 
 ```bash
-npm run build    # compile TypeScript
-npm test         # run all tests
-npm run smoke    # CLI smoke test
+npm test                 # build and run every compiled test
+npm run smoke            # run the built CLI with the mock provider
+npm run package:smoke    # verify the packed library, CLI, and declarations
+npm run release:check    # run the complete release-readiness suite
 ```
 
 ## Package contents
 
 The npm package allowlist includes the runtime files plus the public support
 documents needed for release review: `README.md`, `LICENSE`, `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`.
-Run `npm run package:smoke` or `npm pack --dry-run` before publishing to
-confirm those files are still present in the tarball.
+`npm pack` and `npm publish` build `dist` automatically. Before publishing,
+run `npm run package:smoke`; it creates a tarball, installs it into a temporary
+consumer, and verifies the declared JavaScript export, CLI, and type declaration.
 
 ## License
 
@@ -134,30 +136,3 @@ MIT — use it, break it, benchmark everything.
 - [stackforge](https://github.com/rogerchappel/stackforge) — scaffold generator this was built with
 - [ossrank](https://github.com/rogerchappel/ossrank) — GitHub repo quality scoring
 - [extaudit](https://github.com/rogerchappel/extaudit) — browser extension security auditor
-## CLI Help Smoke
-
-Confirm the packaged command starts and prints its help text before relying on a release tarball or downstream automation:
-
-```bash
-npm run build
-node ./dist/cli.js --help
-```
-
-The command should exit successfully, print the available options, and avoid reading project files or contacting external services.
-
-## Verification
-
-Run these checks before opening a PR or publishing a release:
-
-```bash
-pnpm test
-pnpm run smoke
-pnpm run package:smoke
-pnpm run release:check
-```
-
-## Verification
-
-Run the release-readiness checks that match this package before publishing or opening a release PR.
-
-- `npm run lint` - run lint rules
