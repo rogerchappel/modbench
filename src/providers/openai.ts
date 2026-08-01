@@ -43,7 +43,7 @@ export class OpenAIProvider implements Provider {
   async complete(prompt: string): Promise<{ text: string; metrics: TimingMetrics }> {
     const startTime = performance.now();
     let timeToFirstToken: number | null = null;
-    let tokenCount = 0;
+    let tokenCount: number | null = null;
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
@@ -57,6 +57,7 @@ export class OpenAIProvider implements Provider {
         temperature: this.temperature,
         max_tokens: this.maxTokens,
         stream: true,
+        stream_options: { include_usage: true },
       }),
     });
 
@@ -87,12 +88,14 @@ export class OpenAIProvider implements Provider {
 
         try {
           const chunk: OpenAIResponseChunk = JSON.parse(trimmed.slice(6));
+          if (chunk.usage) {
+            tokenCount = chunk.usage.completion_tokens;
+          }
           const content = chunk.choices?.[0]?.delta?.content;
           if (content) {
             if (timeToFirstToken === null) {
               timeToFirstToken = performance.now() - startTime;
             }
-            tokenCount += content.length;
             fullText += content;
           }
         } catch {
@@ -107,6 +110,7 @@ export class OpenAIProvider implements Provider {
       : totalLatency;
 
     const tokensPerSecond = timeToFirstToken !== null && streamingLatency > 0
+      && tokenCount !== null
       ? (tokenCount / (streamingLatency / 1000))
       : null;
 

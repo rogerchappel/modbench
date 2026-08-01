@@ -11,6 +11,10 @@ export interface AnthropicStreamEvent {
   message?: {
     id: string;
     model: string;
+    usage?: {
+      input_tokens?: number;
+      output_tokens?: number;
+    };
   };
   delta?: {
     type: string;
@@ -39,7 +43,7 @@ export class AnthropicProvider implements Provider {
   async complete(prompt: string): Promise<{ text: string; metrics: TimingMetrics }> {
     const startTime = performance.now();
     let timeToFirstToken: number | null = null;
-    let tokenCount = 0;
+    let tokenCount: number | null = null;
 
     const response = await fetch(`${this.baseUrl}/v1/messages`, {
       method: 'POST',
@@ -83,11 +87,14 @@ export class AnthropicProvider implements Provider {
 
         try {
           const event: AnthropicStreamEvent = JSON.parse(trimmed.slice(6));
+          const outputTokens = event.usage?.output_tokens ?? event.message?.usage?.output_tokens;
+          if (outputTokens !== undefined) {
+            tokenCount = outputTokens;
+          }
           if (event.type === 'content_block_delta' && event.delta?.text) {
             if (timeToFirstToken === null) {
               timeToFirstToken = performance.now() - startTime;
             }
-            tokenCount += event.delta.text.length;
             fullText += event.delta.text;
           }
         } catch {
@@ -102,6 +109,7 @@ export class AnthropicProvider implements Provider {
       : totalLatency;
 
     const tokensPerSecond = timeToFirstToken !== null && streamingLatency > 0
+      && tokenCount !== null
       ? (tokenCount / (streamingLatency / 1000))
       : null;
 
