@@ -79,7 +79,7 @@ export class OpenRouterProvider implements Provider {
               const data = JSON.parse(responseBody);
               const text = data.choices?.[0]?.message?.content ?? '';
               const usage = data.usage;
-              const tokenCount = usage?.total_tokens ?? text.split(/\s+/).length;
+              const tokenCount = usage?.completion_tokens ?? null;
               const totalLatency = endTime - startTime;
               const ttft = firstChunkTime ? firstChunkTime - startTime : null;
               const streamingMs = ttft ? totalLatency - ttft : totalLatency;
@@ -90,7 +90,7 @@ export class OpenRouterProvider implements Provider {
                   timeToFirstTokenMs: ttft,
                   totalLatencyMs: totalLatency,
                   streamingLatencyMs: streamingMs,
-                  tokensPerSecond: tokenCount > 0 && streamingMs > 0
+                  tokensPerSecond: tokenCount !== null && tokenCount > 0 && streamingMs > 0
                     ? Math.round((tokenCount / (streamingMs / 1000)) * 10) / 10
                     : null,
                   tokenCount,
