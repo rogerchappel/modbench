@@ -103,11 +103,22 @@ Run counts are positive safe integers (`1` through
 before a provider is called.
 
 ```typescript
-import { BenchmarkRunner, createMockProvider } from 'modbench';
+import { BenchmarkRunner, MockProvider, type BenchmarkFixture } from 'modbench';
 
-const runner = new BenchmarkRunner();
-const provider = createMockProvider({ latencyMs: 200 });
-const results = await runner.run(provider, { runs: 5 });
+const provider = new MockProvider({
+  name: 'mock',
+  providerType: 'mock',
+  model: 'mock-gpt',
+  apiKey: '',
+  profile: 'fast',
+});
+const runner = new BenchmarkRunner(provider);
+const fixture: BenchmarkFixture = {
+  name: 'hello',
+  description: 'A minimal library API benchmark',
+  prompt: 'Say hello in one sentence.',
+};
+const results = await runner.run(fixture, { runs: 5 });
 ```
 
 ## Development
@@ -121,11 +132,13 @@ npm run release:check    # run the complete release-readiness suite
 
 ## Package contents
 
-The npm package allowlist includes the runtime files plus the public support
+The npm package allowlist includes runtime JavaScript and declarations, but not
+compiled test modules, plus the public support
 documents needed for release review: `README.md`, `LICENSE`, `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`.
 `npm pack` and `npm publish` build `dist` automatically. Before publishing,
 run `npm run package:smoke`; it creates a tarball, installs it into a temporary
-consumer, and verifies the declared JavaScript export, CLI, and type declaration.
+consumer, and compiles and runs the Library API example against the installed
+tarball before verifying the CLI.
 
 ## License
 
