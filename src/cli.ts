@@ -87,9 +87,13 @@ async function runCommand(args: string[]): Promise<void> {
   );
   const mockMode = options.has('--mock');
   const targetProvider = options.get('--provider')?.[0];
-  const runsValue = options.get('--runs')?.[0] ?? '3';
-  if (!/^\d+$/.test(runsValue)) throw new Error('CLI --runs must be a positive safe integer');
-  const runs = assertPositiveRunCount(Number(runsValue), 'CLI --runs');
+  const runsValue = options.get('--runs')?.[0];
+  if (runsValue !== undefined && !/^\d+$/.test(runsValue)) {
+    throw new Error('CLI --runs must be a positive safe integer');
+  }
+  const requestedRuns = runsValue === undefined
+    ? undefined
+    : assertPositiveRunCount(Number(runsValue), 'CLI --runs');
   const fixtureFilter = options.get('--fixture')?.[0];
   const fixtureFile = options.get('--fixture-file')?.[0];
   const configFile = options.get('--config')?.[0];
@@ -122,7 +126,7 @@ async function runCommand(args: string[]): Promise<void> {
     });
 
     const runner = new BenchmarkRunner(provider);
-    allResults = await runner.runMany(filteredFixtures, { runs });
+    allResults = await runner.runMany(filteredFixtures, { runs: requestedRuns ?? 3 });
   } else {
     console.log('Running benchmarks with live providers...');
     const { loadConfig } = await import('./config/loader.js');
@@ -151,6 +155,7 @@ async function runCommand(args: string[]): Promise<void> {
 
     const { createProvider } = await import('./core/provider.js');
     const { BenchmarkRunner } = await import('./core/runner.js');
+    const runs = requestedRuns ?? config.defaultRuns ?? 3;
 
     for (const pc of providers) {
       console.log(`\nBenchmarking: ${pc.name} (${pc.model})...`);
