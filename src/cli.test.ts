@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const cliPath = path.resolve(__dirname, 'cli.js');
 const packageJsonPath = path.resolve(__dirname, '..', 'package.json');
+const exampleConfigPath = path.resolve(__dirname, '..', 'examples', 'basic-benchmark.json');
 
 function runCli(args: string[], cwd = path.resolve(__dirname, '..')) {
   return spawnSync(process.execPath, [cliPath, ...args], {
@@ -55,6 +56,46 @@ describe('CLI', () => {
       const result = runCli(['run', '--config', config, '--runs', '1'], dir);
       assert.equal(result.status, 0, result.stderr);
       assert.match(result.stdout, /Benchmarking: local/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('uses config defaultRuns when --runs is omitted', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-default-runs-'));
+    const output = path.join(dir, 'results.json');
+
+    try {
+      const result = runCli(['run', '--config', exampleConfigPath, '--out', output]);
+      assert.equal(result.status, 0, result.stderr);
+      const results = JSON.parse(readFileSync(output, 'utf8')) as Array<{
+        fixtureName: string;
+        runNumber: number;
+      }>;
+      assert.equal(results.length, 25);
+      for (const fixtureName of new Set(results.map((entry) => entry.fixtureName))) {
+        assert.deepEqual(
+          results.filter((entry) => entry.fixtureName === fixtureName).map((entry) => entry.runNumber),
+          [1, 2, 3, 4, 5],
+        );
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('prefers explicit --runs over config defaultRuns', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-override-runs-'));
+    const output = path.join(dir, 'results.json');
+
+    try {
+      const result = runCli([
+        'run', '--config', exampleConfigPath, '--runs', '2', '--out', output,
+      ]);
+      assert.equal(result.status, 0, result.stderr);
+      const results = JSON.parse(readFileSync(output, 'utf8')) as Array<{ runNumber: number }>;
+      assert.equal(results.length, 10);
+      assert.deepEqual([...new Set(results.map((entry) => entry.runNumber))], [1, 2]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
