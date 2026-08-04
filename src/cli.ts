@@ -23,7 +23,7 @@ Usage:
 Options:
   --mock         Use mock provider (offline, deterministic)
   --provider     Provider name from config
-  --runs         Positive safe integer runs per fixture (default: 3)
+  --runs         Positive safe integer runs per fixture (overrides config; default: 3)
   --fixture      Specific fixture name to run
   --fixture-file Load fixtures from a JSON file
   --config       Load provider configuration from a JSON file

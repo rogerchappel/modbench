@@ -10,8 +10,9 @@ modbench run --mock --runs 5
 
 ## Config File
 
-Create a JSON config and reference it. `defaultRuns` must be a positive safe
-integer:
+Create a JSON config and reference it. When `--runs` is omitted, `defaultRuns`
+sets the runs per fixture and must be a positive safe integer. Passing `--runs`
+overrides the configured value.
 
 ```json
 {
