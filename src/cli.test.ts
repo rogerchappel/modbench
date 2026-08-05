@@ -18,6 +18,13 @@ function runCli(args: string[], cwd = path.resolve(__dirname, '..')) {
   });
 }
 
+const resultFixture = {
+  fixtureName: 'greeting', provider: 'mock', model: 'mock-gpt', prompt: 'Hi',
+  response: 'Hello', metrics: { timeToFirstTokenMs: 1, totalLatencyMs: 2,
+    streamingLatencyMs: 1, tokensPerSecond: 10, tokenCount: 1 },
+  runNumber: 1, timestamp: '2026-01-01T00:00:00.000Z',
+};
+
 describe('CLI', () => {
   it('help flag prints usage information', () => {
     const result = runCli(['--help']);
@@ -136,12 +143,6 @@ describe('CLI', () => {
 
   it('compares repeated --file arguments', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'modbench-compare-'));
-    const resultFixture = {
-      fixtureName: 'greeting', provider: 'mock', model: 'mock-gpt', prompt: 'Hi',
-      response: 'Hello', metrics: { timeToFirstTokenMs: 1, totalLatencyMs: 2,
-        streamingLatencyMs: 1, tokensPerSecond: 10, tokenCount: 1 },
-      runNumber: 1, timestamp: '2026-01-01T00:00:00.000Z',
-    };
     const before = path.join(dir, 'before.json');
     const after = path.join(dir, 'after.json');
     writeFileSync(before, JSON.stringify([resultFixture]));
@@ -151,6 +152,65 @@ describe('CLI', () => {
       const result = runCli(['compare', '--file', before, '--file', after]);
       assert.equal(result.status, 0, result.stderr);
       assert.match(result.stdout, /Cross-Provider Comparison/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports valid array and wrapper result documents', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-report-shapes-'));
+    try {
+      for (const [name, document] of [
+        ['array.json', [resultFixture]],
+        ['wrapper.json', { results: [resultFixture] }],
+      ] as const) {
+        const file = path.join(dir, name);
+        writeFileSync(file, JSON.stringify(document));
+        const result = runCli(['report', '--file', file]);
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(result.stdout, /Total runs: 1/);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects unreadable and malformed report documents with precise diagnostics', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-invalid-report-'));
+    const cases: Array<[string, string | undefined, RegExp]> = [
+      ['missing.json', undefined, /could not read file/],
+      ['invalid.json', '{', /invalid JSON/],
+      ['shape.json', JSON.stringify({ foo: 1 }), /expected a result array or an object with a "results" array/],
+      ['empty.json', JSON.stringify({ results: [] }), /results array is empty/],
+      ['invalid-result.json', JSON.stringify([{ provider: 'mock' }]), /result at index 0 must have a string "fixtureName" field/],
+    ];
+    try {
+      for (const [name, contents, diagnostic] of cases) {
+        const file = path.join(dir, name);
+        if (contents !== undefined) writeFileSync(file, contents);
+        const result = runCli(['report', '--file', file]);
+        assert.notEqual(result.status, 0, name);
+        assert.match(result.stderr, diagnostic, name);
+        assert.equal(result.stdout, '', name);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not emit a partial comparison when any input is invalid', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-partial-compare-'));
+    const valid = path.join(dir, 'valid.json');
+    const invalid = path.join(dir, 'invalid.json');
+    writeFileSync(valid, JSON.stringify([resultFixture]));
+    writeFileSync(invalid, JSON.stringify({ results: [] }));
+    try {
+      for (const badFile of [invalid, path.join(dir, 'missing.json')]) {
+        const result = runCli(['compare', '--file', valid, '--file', badFile]);
+        assert.notEqual(result.status, 0);
+        assert.match(result.stderr, /results array is empty|could not read file/);
+        assert.doesNotMatch(result.stdout, /Cross-Provider Comparison/);
+      }
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

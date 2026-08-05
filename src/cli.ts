@@ -190,16 +190,15 @@ async function reportCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const { readFile } = await import('node:fs/promises');
   const { formatMarkdown } = await import('./output/formatters.js');
+  const { loadResultDocument } = await import('./output/result-document.js');
 
   try {
-    const data = await readFile(file, 'utf-8');
-    const parsed = JSON.parse(data);
-    const results: BenchmarkResult[] = Array.isArray(parsed) ? parsed : (parsed.results || []);
+    const results = await loadResultDocument(file);
     console.log(formatMarkdown(results));
-  } catch {
-    console.error(`Could not read report from: ${file}`);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`Could not load results from \"${file}\": ${detail}`);
     process.exit(1);
   }
 }
@@ -216,25 +215,20 @@ async function compareCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const { readFile } = await import('node:fs/promises');
   const { formatCompareMarkdown } = await import('./output/formatters.js');
+  const { loadResultDocument } = await import('./output/result-document.js');
 
   const allResults: BenchmarkResult[] = [];
 
   for (const filePath of files) {
     try {
-      const data = await readFile(filePath.trim(), 'utf-8');
-      const parsed = JSON.parse(data);
-      const results: BenchmarkResult[] = Array.isArray(parsed) ? parsed : (parsed.results || []);
+      const results = await loadResultDocument(filePath);
       allResults.push(...results);
-    } catch {
-      console.error(`Could not read: ${filePath}`);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error(`Could not load results from \"${filePath}\": ${detail}`);
+      process.exit(1);
     }
-  }
-
-  if (allResults.length === 0) {
-    console.error('No results to compare.');
-    process.exit(1);
   }
 
   console.log(formatCompareMarkdown(allResults));
