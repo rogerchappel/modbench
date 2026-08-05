@@ -66,6 +66,13 @@ modbench run --mock --out results.json
 modbench report --file results.json
 ```
 
+Persisted result files may be either a JSON array of benchmark results or the
+report object written by modbench (with a `results` array). Arrays must be
+non-empty. Each result must include `fixtureName`, `provider`, `model`,
+`prompt`, `response`, `metrics`, `runNumber`, and `timestamp`; timing metrics
+must use numbers or `null` where applicable. Reporting and comparison stop if
+any requested file is unreadable or malformed.
+
 ## Providers
 
 | Provider | API Key | Latency | Best For |
