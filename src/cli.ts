@@ -6,7 +6,8 @@
 
 import type { BenchmarkResult } from './core/types.js';
 import { assertPositiveRunCount } from './core/run-options.js';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 const BENCHMARK_VERSION = '0.1.0';
 
 function printHelp(): void {
@@ -97,7 +98,8 @@ async function runCommand(args: string[]): Promise<void> {
   const fixtureFilter = options.get('--fixture')?.[0];
   const fixtureFile = options.get('--fixture-file')?.[0];
   const configFile = options.get('--config')?.[0];
-  const outputFile = options.get('--out')?.[0];
+  const explicitOutputFile = options.get('--out')?.[0];
+  let configuredOutputDir: string | undefined;
   if (fixtureFilter && fixtureFile) {
     throw new Error('--fixture and --fixture-file cannot be used together');
   }
@@ -134,6 +136,7 @@ async function runCommand(args: string[]): Promise<void> {
     let config: import('./core/types.js').BenchmarkConfig;
     try {
       config = await loadConfig(configFile);
+      configuredOutputDir = config.outputDir;
     } catch (error) {
       console.error(
         configFile
@@ -167,7 +170,11 @@ async function runCommand(args: string[]): Promise<void> {
 
   }
 
+  const outputFile = explicitOutputFile ?? (
+    configuredOutputDir === undefined ? undefined : join(configuredOutputDir, 'results.json')
+  );
   if (outputFile) {
+    await mkdir(dirname(outputFile), { recursive: true });
     await writeFile(outputFile, `${JSON.stringify(allResults, null, 2)}\n`, 'utf8');
     console.log(`Wrote ${allResults.length} result${allResults.length === 1 ? '' : 's'} to ${outputFile}`);
   } else {
