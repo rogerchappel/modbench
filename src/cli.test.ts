@@ -108,6 +108,41 @@ describe('CLI', () => {
     }
   });
 
+  it('persists example config results under outputDir', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-config-output-'));
+    const output = path.join(dir, 'results', 'results.json');
+
+    try {
+      const result = runCli([
+        'run', '--config', exampleConfigPath, '--fixture', 'greeting', '--runs', '1',
+      ], dir);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(existsSync(output), true);
+      const results = JSON.parse(readFileSync(output, 'utf8')) as unknown[];
+      assert.equal(results.length, 1);
+      assert.match(result.stdout, /Wrote 1 result to results[/\\]results\.json/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('prefers --out over config outputDir', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-output-override-'));
+    const output = path.join(dir, 'explicit', 'benchmark.json');
+
+    try {
+      const result = runCli([
+        'run', '--config', exampleConfigPath, '--fixture', 'greeting', '--runs', '1',
+        '--out', output,
+      ], dir);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(existsSync(output), true);
+      assert.equal(existsSync(path.join(dir, 'results', 'results.json')), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('runs only fixtures from an explicit fixture file', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'modbench-fixtures-'));
     const fixtureFile = path.join(dir, 'fixtures.json');
@@ -127,7 +162,7 @@ describe('CLI', () => {
 
   it('writes JSON results to --out', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'modbench-output-'));
-    const output = path.join(dir, 'results.json');
+    const output = path.join(dir, 'nested', 'results.json');
 
     try {
       const result = runCli(['run', '--mock', '--fixture', 'greeting', '--runs', '1', '--out', output]);
