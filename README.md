@@ -55,6 +55,11 @@ modbench run --provider openai
 modbench run --config my-benchmark.json
 ```
 
+If the config sets `outputDir`, modbench writes results to
+`<outputDir>/results.json`, resolving relative paths from the current working
+directory and creating missing parent directories. An explicit `--out <path>`
+overrides `outputDir`.
+
 **Compare two result files:**
 ```bash
 modbench compare --file results-before.json --file results-after.json

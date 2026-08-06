@@ -28,11 +28,13 @@ Options:
   --fixture      Specific fixture name to run
   --fixture-file Load fixtures from a JSON file
   --config       Load provider configuration from a JSON file
-  --out          Write JSON results to a file (default: Markdown on stdout)
+  --out          Write JSON results to a file (overrides config outputDir;
+                 otherwise Markdown is printed when outputDir is unset)
 
 Examples:
   modbench run --mock
   modbench run --provider openai --runs 5
+  modbench run --config examples/basic-benchmark.json
   modbench run --mock --fixture-file examples/custom-fixtures.json --out results.json
   modbench fixtures
   modbench report --file results/bench-2024.json
