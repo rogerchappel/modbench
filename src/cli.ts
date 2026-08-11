@@ -82,12 +82,22 @@ function parseOptions(
   return parsed;
 }
 
+function assertRunOptionCompatibility(options: Map<string, string[]>): void {
+  if (!options.has('--mock')) return;
+
+  const incompatible = ['--provider', '--config'].filter((option) => options.has(option));
+  if (incompatible.length > 0) {
+    throw new Error(`--mock cannot be used with ${incompatible.join(' or ')}`);
+  }
+}
+
 async function runCommand(args: string[]): Promise<void> {
   const options = parseOptions(
     args,
     new Set(['--mock']),
     new Set(['--provider', '--runs', '--fixture', '--fixture-file', '--config', '--out']),
   );
+  assertRunOptionCompatibility(options);
   const mockMode = options.has('--mock');
   const targetProvider = options.get('--provider')?.[0];
   const runsValue = options.get('--runs')?.[0];
