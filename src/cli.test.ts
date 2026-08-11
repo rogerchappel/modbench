@@ -294,6 +294,33 @@ describe('CLI', () => {
     }
   });
 
+  it('rejects live-provider options in mock mode before fixtures or output side effects', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-incompatible-options-'));
+    const missingFixture = path.join(dir, 'missing-fixtures.json');
+
+    try {
+      for (const incompatibleOption of ['--provider', '--config']) {
+        const output = path.join(dir, `${incompatibleOption.slice(2)}.json`);
+        const result = runCli([
+          'run', '--mock', incompatibleOption, 'ignored-value',
+          '--fixture-file', missingFixture, '--out', output,
+        ], dir);
+
+        assert.notEqual(result.status, 0, incompatibleOption);
+        assert.match(
+          result.stderr,
+          new RegExp(`--mock cannot be used with ${incompatibleOption}`),
+          incompatibleOption,
+        );
+        assert.doesNotMatch(result.stderr, /missing-fixtures/);
+        assert.doesNotMatch(result.stdout, /Running benchmarks|modbench Results/);
+        assert.equal(existsSync(output), false);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('fixtures command lists available fixtures', () => {
     const result = runCli(['fixtures']);
 
