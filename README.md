@@ -44,6 +44,11 @@ npm link  # put modbench on your PATH
 modbench run --mock
 ```
 
+Mock mode uses its built-in provider, so `--mock` cannot be combined with the
+live-mode `--provider` or `--config` options. Fixture selection, `--runs`, and
+`--out` work in both modes. Incompatible options are rejected before fixtures,
+providers, or output files are processed.
+
 **OpenAI:**
 ```bash
 export OPENAI_API_KEY="sk-..."

@@ -22,12 +22,13 @@ Usage:
   modbench compare --file <path1> --file <path2>
 
 Options:
-  --mock         Use mock provider (offline, deterministic)
-  --provider     Provider name from config
+  --mock         Use mock provider (offline, deterministic; cannot be combined
+                 with --provider or --config)
+  --provider     Provider name from config (live mode only)
   --runs         Positive safe integer runs per fixture (overrides config; default: 3)
   --fixture      Specific fixture name to run
   --fixture-file Load fixtures from a JSON file
-  --config       Load provider configuration from a JSON file
+  --config       Load provider configuration from a JSON file (live mode only)
   --out          Write JSON results to a file (overrides config outputDir;
                  otherwise Markdown is printed when outputDir is unset)
 
