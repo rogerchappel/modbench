@@ -14,6 +14,12 @@ Create a JSON config and reference it. When `--runs` is omitted, `defaultRuns`
 sets the runs per fixture and must be a positive safe integer. Passing `--runs`
 overrides the configured value.
 
+Every provider requires non-empty `name`, `providerType`, and `model` values.
+Supported provider types are `openai`, `anthropic`, `mock`, `openrouter`, and
+`ollama`. Optional `apiKey` and `baseUrl` values must be strings, and `baseUrl`
+must be a valid URL. The mock-only `profile` accepts `fast`, `default`, `slow`,
+or `variable`. If present, `outputDir` must be a non-empty string.
+
 When `outputDir` is set, a config-driven run writes JSON results to
 `<outputDir>/results.json`, relative to the current working directory. modbench
 creates missing parent directories. Pass `--out <path>` to choose a different

@@ -30,6 +30,14 @@ export type ProviderFactory = (
   config: ProviderConfig,
 ) => Provider;
 
+export const supportedProviderTypes = [
+  'openai',
+  'anthropic',
+  'mock',
+  'openrouter',
+  'ollama',
+] as const satisfies readonly ProviderConfig['providerType'][];
+
 /**
  * Registry of provider factories keyed by provider type.
  */
