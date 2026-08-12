@@ -22,12 +22,13 @@ Usage:
   modbench compare --file <path1> --file <path2>
 
 Options:
-  --mock         Use mock provider (offline, deterministic)
-  --provider     Provider name from config
+  --mock         Use mock provider (offline, deterministic; cannot be combined
+                 with --provider or --config)
+  --provider     Provider name from config (live mode only)
   --runs         Positive safe integer runs per fixture (overrides config; default: 3)
   --fixture      Specific fixture name to run
   --fixture-file Load fixtures from a JSON file
-  --config       Load provider configuration from a JSON file
+  --config       Load provider configuration from a JSON file (live mode only)
   --out          Write JSON results to a file (overrides config outputDir;
                  otherwise Markdown is printed when outputDir is unset)
 
@@ -82,12 +83,22 @@ function parseOptions(
   return parsed;
 }
 
+function assertRunOptionCompatibility(options: Map<string, string[]>): void {
+  if (!options.has('--mock')) return;
+
+  const incompatible = ['--provider', '--config'].filter((option) => options.has(option));
+  if (incompatible.length > 0) {
+    throw new Error(`--mock cannot be used with ${incompatible.join(' or ')}`);
+  }
+}
+
 async function runCommand(args: string[]): Promise<void> {
   const options = parseOptions(
     args,
     new Set(['--mock']),
     new Set(['--provider', '--runs', '--fixture', '--fixture-file', '--config', '--out']),
   );
+  assertRunOptionCompatibility(options);
   const mockMode = options.has('--mock');
   const targetProvider = options.get('--provider')?.[0];
   const runsValue = options.get('--runs')?.[0];
