@@ -7,8 +7,23 @@ import type { BenchmarkConfig } from '../core/types.js';
 import { readFile, access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { assertPositiveRunCount } from '../core/run-options.js';
+import { supportedProviderTypes } from '../core/provider.js';
 
 const DEFAULT_CONFIG_FILENAME = '.modbench.json';
+const MOCK_PROFILES = ['fast', 'default', 'slow', 'variable'] as const;
+
+function requireNonEmptyString(value: unknown, field: string): string {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`${field} must be a non-empty string`);
+  }
+  return value;
+}
+
+function validateOptionalString(value: unknown, field: string): void {
+  if (value !== undefined && typeof value !== 'string') {
+    throw new Error(`${field} must be a string when provided`);
+  }
+}
 
 export async function findConfigPath(
   startDir: string = process.cwd(),
@@ -55,20 +70,40 @@ export async function loadConfig(
     throw new Error('Config must have a "providers" array');
   }
 
-  for (const p of config.providers) {
+  for (const [index, p] of config.providers.entries()) {
+    const prefix = `providers[${index}]`;
     if (typeof p !== 'object' || p === null) {
-      throw new Error('Each provider must be an object');
+      throw new Error(`${prefix} must be an object`);
     }
     const provider = p as Record<string, unknown>;
-    if (typeof provider.name !== 'string') {
-      throw new Error('Each provider must have a "name" string');
+    requireNonEmptyString(provider.name, `${prefix}.name`);
+    const providerType = requireNonEmptyString(provider.providerType, `${prefix}.providerType`);
+    if (!(supportedProviderTypes as readonly string[]).includes(providerType)) {
+      throw new Error(
+        `${prefix}.providerType must be one of: ${supportedProviderTypes.join(', ')}; received "${providerType}"`,
+      );
     }
-    if (typeof provider.providerType !== 'string') {
-      throw new Error('Each provider must have a "providerType" string');
+    requireNonEmptyString(provider.model, `${prefix}.model`);
+    validateOptionalString(provider.apiKey, `${prefix}.apiKey`);
+    validateOptionalString(provider.baseUrl, `${prefix}.baseUrl`);
+    if (typeof provider.baseUrl === 'string') {
+      try {
+        new URL(provider.baseUrl);
+      } catch {
+        throw new Error(`${prefix}.baseUrl must be a valid URL when provided`);
+      }
     }
-    if (typeof provider.model !== 'string') {
-      throw new Error('Each provider must have a "model" string');
+    validateOptionalString(provider.profile, `${prefix}.profile`);
+    if (
+      provider.profile !== undefined &&
+      !(MOCK_PROFILES as readonly unknown[]).includes(provider.profile)
+    ) {
+      throw new Error(`${prefix}.profile must be one of: ${MOCK_PROFILES.join(', ')}`);
     }
+  }
+
+  if (config.outputDir !== undefined) {
+    requireNonEmptyString(config.outputDir, 'outputDir');
   }
 
   const defaultRuns = config.defaultRuns === undefined
@@ -81,6 +116,6 @@ export async function loadConfig(
   return {
     providers: config.providers as BenchmarkConfig['providers'],
     defaultRuns,
-    outputDir: typeof config.outputDir === 'string' ? config.outputDir : undefined,
+    outputDir: config.outputDir as string | undefined,
   };
 }
