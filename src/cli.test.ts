@@ -294,6 +294,29 @@ describe('CLI', () => {
     }
   });
 
+  it('rejects malformed config before creating configured providers', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'modbench-malformed-config-'));
+    const cases = [
+      [{ name: '', providerType: 'mock', model: 'test-model' }, /providers\[0\]\.name/],
+      [{ name: 'unsupported', providerType: 'bogus', model: 'test-model' }, /providers\[0\]\.providerType/],
+      [{ name: 'bad-profile', providerType: 'mock', model: 'test-model', profile: 'turbo' }, /providers\[0\]\.profile/],
+    ] as const;
+
+    try {
+      for (const [provider, expected] of cases) {
+        const config = path.join(dir, `${provider.name || 'empty'}.json`);
+        writeFileSync(config, JSON.stringify({ providers: [provider] }));
+        const result = runCli(['run', '--config', config, '--fixture', 'greeting'], dir);
+
+        assert.notEqual(result.status, 0);
+        assert.match(result.stderr, expected);
+        assert.doesNotMatch(result.stdout, /Benchmarking:/);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('rejects live-provider options in mock mode before fixtures or output side effects', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'modbench-incompatible-options-'));
     const missingFixture = path.join(dir, 'missing-fixtures.json');
