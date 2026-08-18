@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { formatMarkdown, formatCompareMarkdown } from "./formatters.js";
+import { formatMarkdown, formatMarkdownTable, formatCompareMarkdown } from "./formatters.js";
 import type { BenchmarkResult } from "../core/types.js";
 
 const mockResults: BenchmarkResult[] = [
@@ -22,6 +22,15 @@ const mockResults: BenchmarkResult[] = [
   },
 ];
 
+const percentileResults: BenchmarkResult[] = [100, 200].map((totalLatencyMs, index) => ({
+  ...mockResults[0],
+  runNumber: index + 1,
+  metrics: {
+    ...mockResults[0].metrics,
+    totalLatencyMs,
+  },
+}));
+
 describe("formatters", () => {
   it("formatMarkdown produces a table with results header", () => {
     const output = formatMarkdown(mockResults);
@@ -38,5 +47,20 @@ describe("formatters", () => {
   it("formatCompareMarkdown shows comparison header", () => {
     const output = formatCompareMarkdown(mockResults);
     assert.ok(output.includes("Cross-Provider Comparison"));
+  });
+
+  it("uses the interpolated p95 consistently in summary and fixture tables", () => {
+    const output = formatMarkdown(percentileResults);
+    const detail = formatMarkdownTable(percentileResults, "mock", "mock-gpt", "greeting");
+
+    assert.match(output, /\| mock:mock-gpt \| 2 \| 150ms \| 195ms \|/);
+    assert.match(detail, /\| Total Latency \| 150ms \(p95: 195ms\) \|/);
+  });
+
+  it("uses the interpolated p95 consistently in compare tables", () => {
+    const output = formatCompareMarkdown(percentileResults);
+    const matchingRows = output.match(/\| mock:mock-gpt \|(?: greeting \|)? 2 \| 150ms \| 195ms \|/g);
+
+    assert.equal(matchingRows?.length, 2);
   });
 });

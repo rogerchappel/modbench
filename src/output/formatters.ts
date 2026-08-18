@@ -4,10 +4,7 @@
  */
 
 import type { BenchmarkResult, StatisticalSummary } from '../core/types.js';
-import {
-  mean,
-  computeSummary,
-} from '../analysis/stats.js';
+import { computeSummary } from '../analysis/stats.js';
 
 function formatNumber(n: number | null | undefined): string {
   if (n === null || n === undefined) return 'N/A';
@@ -103,15 +100,12 @@ export function formatMarkdown(results: BenchmarkResult[]): string {
       continue;
     }
 
-    const avgLatency = ok.reduce((a, r) => a + r.metrics.totalLatencyMs, 0) / ok.length;
-    const sorted = ok.map((r) => r.metrics.totalLatencyMs).sort((a, b) => a - b);
-    const p95Idx = Math.floor(sorted.length * 0.95);
-    const p95 = sorted[p95Idx];
+    const latencySummary = computeSummary(ok.map((r) => r.metrics.totalLatencyMs));
     const tpss = ok.map((r) => r.metrics.tokensPerSecond).filter((v): v is number => v !== null);
     const avgTps = tpss.length > 0 ? tpss.reduce((a, b) => a + b, 0) / tpss.length : null;
     const errCount = group.filter((r) => r.error).length;
 
-    md += `| ${provider}:${model} | ${group.length} | ${formatNumber(avgLatency)} | ${formatNumber(p95)} | ${avgTps !== null ? avgTps.toFixed(1) : 'N/A'} | ${errCount} |\n`;
+    md += `| ${provider}:${model} | ${group.length} | ${formatNumber(latencySummary.mean)} | ${formatNumber(latencySummary.p95)} | ${avgTps !== null ? avgTps.toFixed(1) : 'N/A'} | ${errCount} |\n`;
   }
 
   // Per-fixture breakdown
@@ -158,15 +152,12 @@ export function formatCompareMarkdown(results: BenchmarkResult[]): string {
       continue;
     }
 
-    const avgLatency = ok.reduce((a, r) => a + r.metrics.totalLatencyMs, 0) / ok.length;
-    const sorted = ok.map((r) => r.metrics.totalLatencyMs).sort((a, b) => a - b);
-    const p95Idx = Math.floor(sorted.length * 0.95);
-    const p95 = sorted[p95Idx];
+    const latencySummary = computeSummary(ok.map((r) => r.metrics.totalLatencyMs));
     const tpss = ok.map((r) => r.metrics.tokensPerSecond).filter((v): v is number => v !== null);
     const avgTps = tpss.length > 0 ? tpss.reduce((a, b) => a + b, 0) / tpss.length : null;
     const errCount = group.filter((r) => r.error).length;
 
-    md += `| ${provider}:${model} | ${fixture} | ${group.length} | ${formatNumber(avgLatency)} | ${formatNumber(p95)} | ${avgTps !== null ? avgTps.toFixed(1) : 'N/A'} | ${errCount} |\n`;
+    md += `| ${provider}:${model} | ${fixture} | ${group.length} | ${formatNumber(latencySummary.mean)} | ${formatNumber(latencySummary.p95)} | ${avgTps !== null ? avgTps.toFixed(1) : 'N/A'} | ${errCount} |\n`;
   }
 
   // Per-fixture comparison
@@ -190,15 +181,12 @@ export function formatCompareMarkdown(results: BenchmarkResult[]): string {
         continue;
       }
 
-      const avgLatency = ok.reduce((a, r) => a + r.metrics.totalLatencyMs, 0) / ok.length;
-      const sorted = ok.map((r) => r.metrics.totalLatencyMs).sort((a, b) => a - b);
-      const p95Idx = Math.floor(sorted.length * 0.95);
-      const p95 = sorted[p95Idx];
+      const latencySummary = computeSummary(ok.map((r) => r.metrics.totalLatencyMs));
       const tpss = ok.map((r) => r.metrics.tokensPerSecond).filter((v): v is number => v !== null);
       const avgTps = tpss.length > 0 ? tpss.reduce((a, b) => a + b, 0) / tpss.length : null;
       const errCount = subGroup.filter((r) => r.error).length;
 
-      md += `| ${provider}:${model} | ${subGroup.length} | ${formatNumber(avgLatency)} | ${formatNumber(p95)} | ${avgTps !== null ? avgTps.toFixed(1) : 'N/A'} | ${errCount} |\n`;
+      md += `| ${provider}:${model} | ${subGroup.length} | ${formatNumber(latencySummary.mean)} | ${formatNumber(latencySummary.p95)} | ${avgTps !== null ? avgTps.toFixed(1) : 'N/A'} | ${errCount} |\n`;
     }
   }
 
