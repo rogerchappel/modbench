@@ -1,0 +1,54 @@
+{
+  "openai": [
+    {
+      "name": "final event split across chunks without a trailing newline",
+      "chunks": ["data: {\"choices\":[{\"delta\":{\"content\":\"hel", "lo\"},\"index\":0,\"finish_reason\":null}],\"usage\":{\"completion_tokens\":2,\"prompt_tokens\":1,\"total_tokens\":3}}"],
+      "text": "hello",
+      "tokenCount": 2
+    },
+    {
+      "name": "final event with a trailing newline",
+      "chunks": ["data: {\"choices\":[{\"delta\":{\"content\":\"hello\"},\"index\":0,\"finish_reason\":null}],\"usage\":{\"completion_tokens\":2,\"prompt_tokens\":1,\"total_tokens\":3}}\n"],
+      "text": "hello",
+      "tokenCount": 2
+    },
+    {
+      "name": "usage-only terminal event",
+      "chunks": ["data: {\"choices\":[{\"delta\":{\"content\":\"hello\"},\"index\":0,\"finish_reason\":null}]}\n", "data: {\"choices\":[],\"usage\":{\"completion_tokens\":2,\"prompt_tokens\":1,\"total_tokens\":3}}"],
+      "text": "hello",
+      "tokenCount": 2
+    },
+    {
+      "name": "malformed and non-data lines before valid terminal data",
+      "chunks": ["event: message\ndata: malformed\n", "data: {\"choices\":[{\"delta\":{\"content\":\"hello\"},\"index\":0,\"finish_reason\":null}],\"usage\":{\"completion_tokens\":2,\"prompt_tokens\":1,\"total_tokens\":3}}"],
+      "text": "hello",
+      "tokenCount": 2
+    }
+  ],
+  "anthropic": [
+    {
+      "name": "final event split across chunks without a trailing newline",
+      "chunks": ["data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"hel", "lo\"},\"usage\":{\"output_tokens\":2}}"],
+      "text": "hello",
+      "tokenCount": 2
+    },
+    {
+      "name": "final event with a trailing newline",
+      "chunks": ["data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"hello\"},\"usage\":{\"output_tokens\":2}}\n"],
+      "text": "hello",
+      "tokenCount": 2
+    },
+    {
+      "name": "usage-only terminal event",
+      "chunks": ["data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"hello\"}}\n", "data: {\"type\":\"message_delta\",\"usage\":{\"output_tokens\":2}}"],
+      "text": "hello",
+      "tokenCount": 2
+    },
+    {
+      "name": "malformed and non-data lines before valid terminal data",
+      "chunks": ["event: content_block_delta\ndata: malformed\n", "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"hello\"},\"usage\":{\"output_tokens\":2}}"],
+      "text": "hello",
+      "tokenCount": 2
+    }
+  ]
+}
