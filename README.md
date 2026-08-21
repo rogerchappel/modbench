@@ -93,6 +93,11 @@ any requested file is unreadable or malformed.
 | `openrouter` | ✅ Required | Varies | Any model via gateway |
 | `ollama` | ❌ None | Local GPU | Self-hosted models (llama3, mistral) |
 
+OpenAI and Anthropic responses are consumed as streaming SSE data. Modbench
+preserves events split across network chunks and processes the final event even
+when the provider closes the stream without a trailing newline; terminal usage
+events supply the reported token count and throughput.
+
 ## Metrics
 
 Every run measures:

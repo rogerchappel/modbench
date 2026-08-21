@@ -72,35 +72,40 @@ export class AnthropicProvider implements Provider {
     let fullText = '';
     let buffer = '';
 
+    const processLine = (line: string): void => {
+      const trimmed = line.trim();
+      if (!trimmed || !trimmed.startsWith('data: ')) return;
+
+      try {
+        const event: AnthropicStreamEvent = JSON.parse(trimmed.slice(6));
+        const outputTokens = event.usage?.output_tokens ?? event.message?.usage?.output_tokens;
+        if (outputTokens !== undefined) {
+          tokenCount = outputTokens;
+        }
+        if (event.type === 'content_block_delta' && event.delta?.text) {
+          if (timeToFirstToken === null) {
+            timeToFirstToken = performance.now() - startTime;
+          }
+          fullText += event.delta.text;
+        }
+      } catch {
+        // Skip malformed events
+      }
+    };
+
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        buffer += decoder.decode();
+        if (buffer) processLine(buffer);
+        break;
+      }
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        if (!trimmed.startsWith('data: ')) continue;
-
-        try {
-          const event: AnthropicStreamEvent = JSON.parse(trimmed.slice(6));
-          const outputTokens = event.usage?.output_tokens ?? event.message?.usage?.output_tokens;
-          if (outputTokens !== undefined) {
-            tokenCount = outputTokens;
-          }
-          if (event.type === 'content_block_delta' && event.delta?.text) {
-            if (timeToFirstToken === null) {
-              timeToFirstToken = performance.now() - startTime;
-            }
-            fullText += event.delta.text;
-          }
-        } catch {
-          // Skip malformed events
-        }
-      }
+      for (const line of lines) processLine(line);
     }
 
     const totalLatency = performance.now() - startTime;

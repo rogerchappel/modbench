@@ -73,35 +73,41 @@ export class OpenAIProvider implements Provider {
     let fullText = '';
     let buffer = '';
 
+    const processLine = (line: string): void => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === 'data: [DONE]') return;
+      if (!trimmed.startsWith('data: ')) return;
+
+      try {
+        const chunk: OpenAIResponseChunk = JSON.parse(trimmed.slice(6));
+        if (chunk.usage) {
+          tokenCount = chunk.usage.completion_tokens;
+        }
+        const content = chunk.choices?.[0]?.delta?.content;
+        if (content) {
+          if (timeToFirstToken === null) {
+            timeToFirstToken = performance.now() - startTime;
+          }
+          fullText += content;
+        }
+      } catch {
+        // Skip malformed chunks
+      }
+    };
+
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        buffer += decoder.decode();
+        if (buffer) processLine(buffer);
+        break;
+      }
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed === 'data: [DONE]') continue;
-        if (!trimmed.startsWith('data: ')) continue;
-
-        try {
-          const chunk: OpenAIResponseChunk = JSON.parse(trimmed.slice(6));
-          if (chunk.usage) {
-            tokenCount = chunk.usage.completion_tokens;
-          }
-          const content = chunk.choices?.[0]?.delta?.content;
-          if (content) {
-            if (timeToFirstToken === null) {
-              timeToFirstToken = performance.now() - startTime;
-            }
-            fullText += content;
-          }
-        } catch {
-          // Skip malformed chunks
-        }
-      }
+      for (const line of lines) processLine(line);
     }
 
     const totalLatency = performance.now() - startTime;
