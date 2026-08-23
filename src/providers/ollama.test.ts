@@ -22,6 +22,11 @@ describe("OllamaProvider", () => {
     assert.strictEqual(p.model, "mistral");
   });
 
+  it("exposes the configured instance name", () => {
+    const p = new OllamaProvider({ ...baseConfig, name: "local-lab" });
+    assert.strictEqual(p.name, "local-lab");
+  });
+
   it("accepts custom baseUrl", () => {
     const p = new OllamaProvider({
       ...baseConfig,

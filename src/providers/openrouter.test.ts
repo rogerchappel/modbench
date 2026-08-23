@@ -12,13 +12,13 @@ describe("OpenRouterProvider", () => {
 
   it("instantiates with config", () => {
     const config: ProviderConfig = {
-      name: "openrouter",
+      name: "backup-router",
       providerType: "openrouter",
       model: "meta-llama/llama-3-8b-instruct",
       apiKey: "test-key",
     };
     const p = new OpenRouterProvider(config);
-    assert.strictEqual(p.name, "openrouter");
+    assert.strictEqual(p.name, "backup-router");
     assert.strictEqual(p.model, "meta-llama/llama-3-8b-instruct");
   });
 
