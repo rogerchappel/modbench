@@ -17,13 +17,14 @@ export interface OpenRouterProviderOptions {
 }
 
 export class OpenRouterProvider implements Provider {
-  public readonly name = 'openrouter';
+  public readonly name: string;
   public readonly model: string;
   private apiKey: string;
   private baseUrl: string;
   private temperature: number;
 
   constructor(config: ProviderConfig) {
+    this.name = config.name;
     this.model = config.model || 'meta-llama/llama-3-8b-instruct';
     this.apiKey = config.apiKey || process.env.OPENROUTER_API_KEY || '';
     this.baseUrl = config.baseUrl || 'https://openrouter.ai/api/v1/chat/completions';

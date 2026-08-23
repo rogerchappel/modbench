@@ -35,7 +35,7 @@ export class AnthropicProvider implements Provider {
   constructor(config: ProviderConfig) {
     this.name = config.name;
     this.model = config.model;
-    this.apiKey = config.apiKey;
+    this.apiKey = config.apiKey || process.env.ANTHROPIC_API_KEY || '';
     this.baseUrl = config.baseUrl || 'https://api.anthropic.com';
     this.maxTokens = config.maxTokens ?? 1024;
   }

@@ -16,11 +16,12 @@ export interface OllamaProviderOptions {
 }
 
 export class OllamaProvider implements Provider {
-  public readonly name = 'ollama';
+  public readonly name: string;
   public readonly model: string;
   private baseUrl: string;
 
   constructor(config: ProviderConfig) {
+    this.name = config.name;
     this.model = config.model || 'llama3.2';
     this.baseUrl = config.baseUrl || 'http://localhost:11434';
   }

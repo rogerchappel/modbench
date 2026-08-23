@@ -34,7 +34,7 @@ export class OpenAIProvider implements Provider {
   constructor(config: ProviderConfig) {
     this.name = config.name;
     this.model = config.model;
-    this.apiKey = config.apiKey;
+    this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || '';
     this.baseUrl = config.baseUrl || 'https://api.openai.com/v1';
     this.temperature = config.temperature ?? 0;
     this.maxTokens = config.maxTokens ?? 1024;
