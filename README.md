@@ -55,6 +55,11 @@ export OPENAI_API_KEY="sk-..."
 modbench run --provider openai
 ```
 
+OpenAI and Anthropic use `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`, respectively,
+when `apiKey` is empty or omitted from the selected provider configuration. A
+non-empty configured `apiKey` takes precedence over the environment. OpenRouter
+similarly falls back to `OPENROUTER_API_KEY`.
+
 **Custom config:**
 ```bash
 modbench run --config my-benchmark.json
@@ -97,6 +102,10 @@ OpenAI and Anthropic responses are consumed as streaming SSE data. Modbench
 preserves events split across network chunks and processes the final event even
 when the provider closes the stream without a trailing newline; terminal usage
 events supply the reported token count and throughput.
+
+Each provider's configured `name` identifies that instance in benchmark results
+and reports. This lets multiple configurations of the same provider type remain
+distinct (for example, `backup-router` and `local-lab`).
 
 ## Metrics
 
