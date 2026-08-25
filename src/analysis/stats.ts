@@ -3,7 +3,18 @@
  * Computes mean, median, stdDev, percentiles from a number array.
  */
 
-export function percentile(sortedValues: number[], p: number): number {
+export function percentile(values: number[], p: number): number {
+  if (!Number.isFinite(p) || p < 0 || p > 100) {
+    throw new RangeError("percentile must be a finite number between 0 and 100");
+  }
+  if (values.length === 0) return 0;
+  if (values.length === 1) return values[0];
+
+  const sortedValues = [...values].sort((a, b) => a - b);
+  return percentileSorted(sortedValues, p);
+}
+
+function percentileSorted(sortedValues: number[], p: number): number {
   if (sortedValues.length === 0) return 0;
   if (sortedValues.length === 1) return sortedValues[0];
 
@@ -22,8 +33,7 @@ export function mean(values: number[]): number {
 }
 
 export function median(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  return percentile(sorted, 50);
+  return percentile(values, 50);
 }
 
 export function stdDev(values: number[], avg?: number): number {
@@ -48,12 +58,12 @@ export function computeSummary(values: number[]): {
   return {
     count: values.length,
     mean: mean(values),
-    median: percentile(sorted, 50),
+    median: percentileSorted(sorted, 50),
     stdDev: stdDev(values),
     min: sorted[0] ?? 0,
     max: sorted[sorted.length - 1] ?? 0,
-    p50: percentile(sorted, 50),
-    p95: percentile(sorted, 95),
-    p99: percentile(sorted, 99),
+    p50: percentileSorted(sorted, 50),
+    p95: percentileSorted(sorted, 95),
+    p99: percentileSorted(sorted, 99),
   };
 }
