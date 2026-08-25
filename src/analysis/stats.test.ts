@@ -38,13 +38,29 @@ describe("statistics", () => {
   });
 
   describe("percentile", () => {
-    it("p50 equals median", () => {
-      assert.strictEqual(percentile([1, 2, 3, 4, 5], 50), median([1, 2, 3, 4, 5]));
+    it("sorts a copy before interpolating", () => {
+      const values = [100, 1, 2];
+      assert.strictEqual(percentile(values, 50), 2);
+      assert.deepStrictEqual(values, [100, 1, 2]);
     });
 
-    it("p95 captures tail", () => {
-      const values = Array.from({ length: 100 }, (_, i) => i + 1);
-      assert.ok(percentile(values, 95) > percentile(values, 50));
+    it("returns the endpoints at percentile bounds", () => {
+      assert.strictEqual(percentile([30, 10, 20], 0), 10);
+      assert.strictEqual(percentile([30, 10, 20], 100), 30);
+    });
+
+    it("rejects non-finite and out-of-range percentiles", () => {
+      for (const invalid of [-1, 101, Number.NaN, Number.POSITIVE_INFINITY]) {
+        assert.throws(
+          () => percentile([1, 2, 3], invalid),
+          { name: "RangeError", message: "percentile must be a finite number between 0 and 100" },
+        );
+      }
+    });
+
+    it("handles empty and singleton inputs", () => {
+      assert.strictEqual(percentile([], 50), 0);
+      assert.strictEqual(percentile([42], 95), 42);
     });
   });
 
@@ -57,6 +73,20 @@ describe("statistics", () => {
       assert.ok(summary.p50 > 0);
       assert.ok(summary.p95 > 0);
       assert.ok(summary.p99 > 0);
+    });
+
+    it("keeps percentile fields correct for unsorted input", () => {
+      assert.deepStrictEqual(computeSummary([100, 1, 2]), {
+        count: 3,
+        mean: 103 / 3,
+        median: 2,
+        stdDev: stdDev([100, 1, 2]),
+        min: 1,
+        max: 100,
+        p50: 2,
+        p95: 90.19999999999999,
+        p99: 98.04,
+      });
     });
   });
 });
