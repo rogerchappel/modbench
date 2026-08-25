@@ -152,6 +152,20 @@ const fixture: BenchmarkFixture = {
 const results = await runner.run(fixture, { runs: 5 });
 ```
 
+The public `percentile(values, p)` helper accepts values in any order without
+mutating the input. `p` is an inclusive percentage from `0` through `100`;
+non-finite or out-of-range percentages throw `RangeError`. Empty inputs return
+`0`, matching the other summary helpers, and singleton inputs return their only
+value. Percentiles use linear interpolation between adjacent sorted values.
+
+```typescript
+import { percentile } from 'modbench';
+
+percentile([100, 1, 2], 50); // 2
+percentile([30, 10, 20], 0); // 10
+percentile([30, 10, 20], 100); // 30
+```
+
 ## Development
 
 ```bash
