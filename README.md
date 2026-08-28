@@ -29,6 +29,8 @@ modbench gives you a local-first CLI to:
 
 ## Install
 
+modbench requires Node.js 20 or newer.
+
 ```bash
 git clone https://github.com/rogerchappel/modbench.git
 cd modbench
