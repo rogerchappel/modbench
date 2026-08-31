@@ -187,6 +187,12 @@ run `npm run package:smoke`; it creates a tarball, installs it into a temporary
 consumer, and compiles and runs the Library API example against the installed
 tarball before verifying the CLI.
 
+Pushing a `v*.*.*` tag runs the release checks, packs exactly one tarball, and
+publishes that verified artifact to npm with provenance and public access. The
+workflow attaches the same tarball to the corresponding GitHub release. Run
+`npm run release:contract` locally to verify that pack, publish, and attachment
+continue to use one artifact.
+
 ## License
 
 MIT — use it, break it, benchmark everything.
