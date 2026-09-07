@@ -83,13 +83,23 @@ export async function loadFixtureFile(path: string): Promise<BenchmarkFixture[]>
   const raw = await readFile(path, 'utf8');
   const parsed: unknown = JSON.parse(raw);
   const fixtures = Array.isArray(parsed) ? parsed : [parsed];
-  if (fixtures.length === 0 || fixtures.some((fixture) =>
-    typeof fixture !== 'object' || fixture === null
-    || typeof (fixture as Record<string, unknown>).name !== 'string'
-    || typeof (fixture as Record<string, unknown>).description !== 'string'
-    || typeof (fixture as Record<string, unknown>).prompt !== 'string'
-  )) {
+  if (fixtures.length === 0) {
     throw new Error(`Invalid fixture file: ${path}`);
+  }
+
+  for (const [index, fixture] of fixtures.entries()) {
+    if (typeof fixture !== 'object' || fixture === null) {
+      throw new Error(`Invalid fixture file: ${path}; fixture at index ${index} must be an object`);
+    }
+
+    const record = fixture as Record<string, unknown>;
+    for (const field of ['name', 'description', 'prompt'] as const) {
+      if (typeof record[field] !== 'string' || record[field].trim().length === 0) {
+        throw new Error(
+          `Invalid fixture file: ${path}; fixture at index ${index} must have a non-empty "${field}" field`,
+        );
+      }
+    }
   }
   return fixtures as BenchmarkFixture[];
 }
