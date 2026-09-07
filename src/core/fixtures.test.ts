@@ -1,6 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { loadFixtures, getFixtureByName } from "./fixtures.js";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { loadFixtures, loadFixtureFile, getFixtureByName } from "./fixtures.js";
 
 describe("fixtures", () => {
   it("returns bundled fixtures when no custom fixtures exist", async () => {
@@ -42,4 +45,38 @@ describe("fixtures", () => {
     const categories = new Set(fixtures.map(f => f.category));
     assert.ok(categories.size >= 4, "should have at least 4 categories");
   });
+
+  it("loads valid custom fixture objects and arrays", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "modbench-fixtures-"));
+    const fixturePath = path.join(dir, "custom.json");
+    const fixture = { name: "custom", description: "Custom fixture", prompt: "Say hello." };
+
+    try {
+      await writeFile(fixturePath, JSON.stringify(fixture));
+      assert.deepStrictEqual(await loadFixtureFile(fixturePath), [fixture]);
+
+      await writeFile(fixturePath, JSON.stringify([fixture, { ...fixture, name: "second" }]));
+      assert.deepStrictEqual(await loadFixtureFile(fixturePath), [fixture, { ...fixture, name: "second" }]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  for (const field of ["name", "description", "prompt"] as const) {
+    it(`rejects empty or whitespace-only custom fixture ${field} values`, async () => {
+      const dir = await mkdtemp(path.join(tmpdir(), "modbench-fixtures-"));
+      const fixturePath = path.join(dir, `${field}.json`);
+      const fixture = { name: "custom", description: "Custom fixture", prompt: "Say hello.", [field]: "   " };
+
+      try {
+        await writeFile(fixturePath, JSON.stringify(field === "description" ? [fixture] : fixture));
+        await assert.rejects(
+          loadFixtureFile(fixturePath),
+          new RegExp(`Invalid fixture file: .*${field}\\.json.*non-empty "${field}"`),
+        );
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
+  }
 });
