@@ -120,13 +120,15 @@ Every run measures:
 
 ## Fixtures
 
-modbench ships with 6 fixture categories:
-- `greeting` — basic prompts (warm-up)
+modbench ships with 5 fixtures across these categories:
+- `basic` — simple prompts (warm-up)
 - `summarization` — text comprehension
-- `code-generation` — TypeScript, Python, SQL
+- `code` — code generation
+- `structured` — structured JSON output
 - `reasoning` — math and logic puzzles
-- `creative-writing` — stylistic constraints
-- `safety` — ethical reasoning scenarios
+
+Custom fixture files may contain one fixture object or an array. Every fixture
+must provide non-empty `name`, `description`, and `prompt` strings.
 
 ## Library API
 
