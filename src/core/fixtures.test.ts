@@ -66,14 +66,18 @@ describe("fixtures", () => {
     it(`rejects empty or whitespace-only custom fixture ${field} values`, async () => {
       const dir = await mkdtemp(path.join(tmpdir(), "modbench-fixtures-"));
       const fixturePath = path.join(dir, `${field}.json`);
-      const fixture = { name: "custom", description: "Custom fixture", prompt: "Say hello.", [field]: "   " };
 
       try {
-        await writeFile(fixturePath, JSON.stringify(field === "description" ? [fixture] : fixture));
-        await assert.rejects(
-          loadFixtureFile(fixturePath),
-          new RegExp(`Invalid fixture file: .*${field}\\.json.*non-empty "${field}"`),
-        );
+        for (const invalidValue of ["", "   "]) {
+          const fixture = {
+            name: "custom", description: "Custom fixture", prompt: "Say hello.", [field]: invalidValue,
+          };
+          await writeFile(fixturePath, JSON.stringify(field === "description" ? [fixture] : fixture));
+          await assert.rejects(
+            loadFixtureFile(fixturePath),
+            new RegExp(`Invalid fixture file: .*${field}\\.json.*non-empty "${field}"`),
+          );
+        }
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
