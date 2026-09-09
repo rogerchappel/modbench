@@ -5,6 +5,7 @@
  * Uses OpenAI-compatible endpoint for consistency.
  */
 
+import http from "node:http";
 import https from "node:https";
 import type { Provider } from "../core/provider.js";
 import type { ProviderConfig, TimingMetrics } from "../core/types.js";
@@ -38,6 +39,7 @@ export class OpenRouterProvider implements Provider {
 
     const startTime = Date.now();
     const url = new URL(this.baseUrl);
+    const transport = url.protocol === 'http:' ? http : https;
 
     const body = JSON.stringify({
       model: this.model,
@@ -47,10 +49,11 @@ export class OpenRouterProvider implements Provider {
     });
 
     return new Promise((resolve, reject) => {
-      const req = https.request(
+      const req = transport.request(
         {
           hostname: url.hostname,
-          path: url.pathname,
+          port: url.port || undefined,
+          path: `${url.pathname}${url.search}`,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
