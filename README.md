@@ -62,6 +62,10 @@ when `apiKey` is empty or omitted from the selected provider configuration. A
 non-empty configured `apiKey` takes precedence over the environment. OpenRouter
 similarly falls back to `OPENROUTER_API_KEY`.
 
+OpenRouter `baseUrl` values may use HTTP or HTTPS compatibility endpoints.
+Modbench preserves the configured port, path, and query string, so local
+gateways and versioned OpenAI-compatible routes can be benchmarked directly.
+
 **Custom config:**
 ```bash
 modbench run --config my-benchmark.json
